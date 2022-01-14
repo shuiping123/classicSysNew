@@ -1,0 +1,14 @@
+
+.form-inline{
+  display: flex;
+}
+
+/*清除按钮样式，包含边框，背景，hover全部清除*/
+.clearStyleBtn{
+  border:none;
+  background: none;
+}
+.clearStyleBtn:hover{
+  border:none;
+  background: none;
+}
