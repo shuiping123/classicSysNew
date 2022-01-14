@@ -39,21 +39,6 @@ module.exports = {
     },
     // before: require('./mock/mock-server.js'),
     /** dev环境下使用proxy代理，生产环境下注释此条后build */
-    // proxy: {
-    //   [process.env.VUE_APP_BASE_API]: {
-    //     // target: `http://192.168.0.253:8001/`,
-    //     target: `http://192.168.0.111:8071`,
-    //     // target: `http://192.168.0.151:8001/`,
-    //     // target: `http://192.168.3.32:8002/`,
-    //     // target: `http://localhost:8080/`,
-    //     changeOrigin: true,
-    //     ws: true,
-    //     secure: false,
-    //     pathRewrite: {
-    //       ['^' + process.env.VUE_APP_BASE_API]: '/'
-    //     }
-    //   }
-    // }
     proxy: {
       "/api": {
         target: "http://192.168.0.111:8072/", // 目标代理接口地址

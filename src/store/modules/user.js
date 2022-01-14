@@ -2,6 +2,7 @@ import { login, logout, getInfo,checklog,getpower } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 import context from "@/main";
+import store from "@/store";
 
 const state = {
   token: getToken(),
@@ -10,7 +11,6 @@ const state = {
   introduction: '',
   roles: []
 }
-
 const mutations = {
   SET_TOKEN: (state, token) => {
     state.token = token
@@ -111,8 +111,8 @@ const actions = {
          removeToken()
          // resetRouter()
          // commit('stateMine/changeUsrRole', {nav:[]},{ root: true });
-         commit('stateMine/changeLogState', 'logout',{ root: true })
-
+         // commit('stateMine/changeLogState', 'logout',{ root: true })
+         dispatch('logout');
          // reset visited views and cached views
          // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
          dispatch('tagsView/delAllViews', null, { root: true })
@@ -131,6 +131,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       getpower().then((res) => {
         if (res.reCode==0){
+          commit('settings/CHANGE_SETTING', {key:'language',value:res.reData.IsChn?'zh':'en'});
           commit('stateMine/changeLogState', 'login',{ root: true });
           commit("stateMine/changeUsrRole",res.reData,{ root: true });
         }else{

@@ -86,5 +86,5 @@ export default {
     index:'signOut.ashx'
   },
   checkLog:'CheckLogin.ashx',
-  getPower:'Menu.ashx',
+  getPower:'Index.ashx',
 }

@@ -8,12 +8,15 @@ const state = {
    * */
   logState:'login',
   /**
-   * 当前登录的用户权限Id
-   * @value 1系统管理员/2管理员/3普通用户 目前按照这三种来写
-   * null初始为0，没有任何权限，以免造成页面权限还未获取时可以点击的问题
+   * 当前登录的用户权限
+   * nav 当前可访问的目录导航
+   * usrInfo 当前用户的信息
+   * optionRole 操作权限
    * */
   UsrRole:{
-    nav:[]
+    nav:[],
+    usrInfo:{},
+    optionRole:{}
   },
   // /**
   //  * 判定loading是否显示
@@ -44,6 +47,7 @@ const mutations = {
     }else {
       resetRouter(data.nav);
     }
+
 
   },
   // // 是否显示loading弹框
