@@ -33,6 +33,12 @@ const i18n = new VueI18n({
   locale: store.state.settings.language, // 语言标识
   messages
 });
+import 'vx-easyui/dist/themes/default/easyui.css';
+import 'vx-easyui/dist/themes/icon.css';
+import 'vx-easyui/dist/themes/vue.css';
+import EasyUI from 'vx-easyui';
+Vue.use(EasyUI);
+
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

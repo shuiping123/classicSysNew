@@ -1,7 +1,8 @@
 export default {
   fileManager:{
     sideTree:"Index.ashx",
-    tableList:"Index.ashx",
+    getTablePro:"Index.ashx",
+    getTableItem:"Index.ashx",
     getAttr:"AttributeInfo.ashx",
     getItemType:"DropSelData.ashx",
     getBorrow:"AttributeInfo.ashx",

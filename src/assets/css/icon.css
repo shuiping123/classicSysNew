@@ -1,0 +1,163 @@
+/*====================== 更换easyui图标 ==========================*/
+/*无图标显示*/
+.ico_blank {
+  background: none no-repeat center center !important;
+}
+/*卷图标*/
+.ico_juan {
+  background: url("./../images/juan.png") no-repeat center center;
+  background-size: 100% 100%;
+}
+/*拆卷图标*/
+.icon-chaijuan{
+  background: url("./../images/chaijuan.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*归卷图标*/
+.icon-guijuan{
+  background: url("./../images/guijuan.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*链接图标*/
+.icon-link-mine{
+  background: url("./../images/link.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*返回源链接*/
+.icon-return-link-mine{
+  background: url("./../images/return_link.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*群组图标*/
+.icon-users-mine{
+  background: url("./../images/users.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*添加群组*/
+.icon-addUsers-mine{
+  background: url("./../images/addUsers.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*修改群组*/
+.icon-editUsers-mine{
+  background: url("./../images/editUsers.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*用户图标*/
+.icon-user-mine{
+  background: url("./../images/user.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*添加用户*/
+.icon-addUser-mine{
+  background: url("./../images/addUser.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*修改用户*/
+.icon-editUser-mine{
+  background: url("./../images/editUser.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*系统管理员*/
+.icon-manager-mine{
+  background: url("./../images/manager.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*公司图标*/
+.icon-com-mine{
+  background: url("./../images/company.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*属性模板*/
+.icon-attr-mine{
+  background: url("./../images/attr.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*全局视图*/
+.icon-view-mine{
+  background: url("./../images/view.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*用户权限*/
+.icon-user-power-mine{
+  background: url("./../images/power.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*系统设置*/
+.icon-option-mine{
+  background: url("./../images/option.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*系统日志*/
+.icon-sysLog-mine{
+  background: url("./../images/sysLog.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*数据维护*/
+.icon-maintain-mine{
+  background: url("./../images/maintain.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*树形图项目图标*/
+.icon-project-mine{
+  background: url("./../images/project.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*删除用户*/
+.icon-usr-delete-mine{
+  background: url("./../images/usrDeleteMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*禁用用户*/
+.icon-usr-disabled-mine{
+  background: url("./../images/usrDisabledMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*用户取消禁用*/
+.icon-usr-cancel-disabled-mine{
+  background: url("./../images/usrCancelDisabledMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*印章图标*/
+.icon-seal-mine{
+  background: url("./../images/sealMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*取消印章图标*/
+.icon-cancel-seal-mine{
+  background: url("./../images/cancelSealMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*人员调整*/
+.icon-user-transfrom-mine{
+  background: url("./../images/usrTransformMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*人员调整*/
+.icon-date-mine{
+  background: url("./../images/date.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*原件列表 原件图标*/
+.icon-file-mine{
+  background: url("./../images/fileMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*pdf图标*/
+.icon-pdf-mine{
+  background: url("./../images/pdfMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*文件图标 普通的*/
+.icon-normal-file-mine{
+  background: url("./../images/treeFileMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+/*log记录*/
+.icon-log-mine{
+  background: url("./../images/logMine.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
+
+/*====================== 更换easyui图标 ==========================*/
+

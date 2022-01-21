@@ -37,6 +37,7 @@
                              :width="item.width"
                              :min-width="item.minWidth">
               <div slot-scope="scope" style="display: flex;align-items: center;">
+                    <div v-html="item.template"></div>
               <span v-if="item.template" :class="chooseIcon(scope.row,scope.row[item.template])"
                     style="display: inline-block;width: 16px;height: 16px;overflow: hidden;"></span>
                 <span style="display: inline-block;flex: 1;"
@@ -105,10 +106,10 @@
           :total="data.count">
         </el-pagination>
       </div>
-      <button type="button" class="clearStyleBtn" style="height: 100%;" @click="reloadThisPage">
-        <i class="el-icon-refresh"></i> 刷新
+      <button type="button" class="clearStyleBtn" style="height: 100%;font-size:13px;color:#606266" @click="reloadThisPage">
+        <i class="el-icon-refresh" style="color: #409eff"></i> 刷新
       </button>
-      <button type="button" class="clearStyleBtn" style="height: 100%;">
+      <button type="button" class="clearStyleBtn" style="height: 100%;font-size:13px;color:#606266">
         当前显示{{(page_now-1)*data.limit+1}} - {{(page_now-1)*data.limit+data.data.length}}条数据
       </button>
     </div>
@@ -117,11 +118,46 @@
 
 <script>
   import ResizeObserverPolyfill from 'resize-observer-polyfill';
+  import Vue from 'vue'
+  import { Table } from 'element-ui';
+  // 根据阅读Vue源代码(src/core/global-api/extend.js 第23~26),当Vue将一个配置对象注册成组件的时候,会自动的在配置上面
+  // 加上属性_Ctor,当再次使用同一个配置对象的时候,因为这个对象上面已经有_Ctor[SuperId]了,那么就会直接返回早已经注册后的
+  // 组件,导致我们下面的注册代码无效果
+  /* 这就是上述的Vue源代码
+    const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
+    if (cachedCtors[SuperId]) {
+      return cachedCtors[SuperId]
+    }
+  */
+  // 解决方案两个:1.直接让Vue.component...这段注册代码早于Vue.use(ElementUI) 2.执行 delete Table._Ctor后再注册
+  delete Table._Ctor
+  const bindEvents = Table.methods.bindEvents
+  Object.assign(Table.methods,{
+    bindEvents() {
+      bindEvents.call(this)
+      this.bodyWrapper.addEventListener('mousewheel', this.handleBodyMousewheel)
+    },
+    handleBodyMousewheel(event) {
+      const fixedWrapper = this.$refs.fixedWrapper
+      if (fixedWrapper) {
+        const fixedBodyWrapper = fixedWrapper.querySelector('.el-table__fixed-body-wrapper')
+        if (fixedBodyWrapper) {
+          event.preventDefault()
+          fixedBodyWrapper.scrollBy({ left: event.deltaX, top: event.deltaY })
+          this.$refs.bodyWrapper.scrollBy({ left: event.deltaX, top: event.deltaY })
+        }
+      }
+    }
+  })
+  Vue.component(
+    Table.name,
+    Table
+  );
 
 
   export default {
     name: "index",
-    components: {},
+    components:{},
     props: {
       // 表格的数据，含title,data,limit,
       data: {
@@ -140,9 +176,9 @@
         default: true,
       },
       // 是否显示表头标题
-      showHeader:{
-        type:Boolean,
-        default:true,
+      showHeader: {
+        type: Boolean,
+        default: true,
       },
       // 表格的名字，类似于id，不可重复，此项用于key使用
       filter: {
@@ -159,8 +195,7 @@
         tableHeight: 100, //设置表格默认高度
       }
     },
-    watch:{
-    },
+    watch: {},
     computed: {
       // 计算分页总数
       pageNum() {
@@ -178,7 +213,7 @@
         new ResizeObserverPolyfill(entries => {
           // 注意，entres是个数组，数组项为每个需要监听的DOM节点
           entries.forEach(entry => {
-            this.tableHeight = entry.contentRect.height-5;
+            this.tableHeight = entry.contentRect.height - 5;
           })
         }).observe(dom)
       })
@@ -211,9 +246,9 @@
         if (this.page_now > 1) {
           this.page_now -= 1;
           this.$emit('reloadTableForThisPage', this.page_now);
-        }else{
-          let content = this.$store.state.language==="zh"?"您已在首页":"You are already on the home page.";
-          this.$current.messageMine(content,'warning');
+        } else {
+          let content = this.$store.state.language === "zh" ? "您已在首页" : "You are already on the home page.";
+          this.$current.messageMine(content, 'warning');
         }
       },
       // 往后翻一页
@@ -221,9 +256,9 @@
         if (this.page_now < this.pageNum) {
           this.page_now += 1;
           this.$emit('reloadTableForThisPage', this.page_now);
-        }else {
-          let content = this.$store.state.language==="zh"?"您已在尾页":"You are already on the last page.";
-          this.$current.messageMine(content,'warning');
+        } else {
+          let content = this.$store.state.language === "zh" ? "您已在尾页" : "You are already on the last page.";
+          this.$current.messageMine(content, 'warning');
         }
       },
       // 翻到最后一页
@@ -232,7 +267,7 @@
         this.$emit('reloadTableForThisPage', this.page_now);
       },
       // 刷新当前页
-      reloadThisPage(){
+      reloadThisPage() {
         this.$emit('reloadTableForThisPage', this.page_now);
       },
       // 图标判断
@@ -261,7 +296,7 @@
           case 'ProNoHavePub':
             cls = 'icon-project-mine';
             break;
-            // 下面的原件列表的Type
+          // 下面的原件列表的Type
           case 'File':
             cls = 'icon-normal-file-mine';
             break;
@@ -284,7 +319,7 @@
         this.$emit('handleSelectionChange', selection)
       },
       // js选中某一行的数据 - 默认
-      setCurrentRow(data){
+      setCurrentRow(data) {
         this.$refs.table.setCurrentRow(data);
       },
       // *******************按住shift连选*******************
@@ -309,7 +344,7 @@
       // 单元格单击事件
       pinSelect(row, column, cell, event) {
         if (!this.pin) {
-          this.origin=row.index;
+          this.origin = row.index;
           this.db = false;
           // 单元格点击联动内容
           this.$emit('cell-click', row);
@@ -332,7 +367,7 @@
   /*表格内容*/
   .contentTable {
     width: 100%;
-    height: 100%!important;
+    height: 100% !important;
     display: flex;
     flex-direction: column;
   }
@@ -354,28 +389,32 @@
   }
 </style>
 <style>
-  .form-inline{
+  .form-inline {
     display: flex;
   }
-  .contentTable .el-table{
-    display: flex!important;
+
+  .contentTable .el-table {
+    display: flex !important;
     flex-direction: column;
     /*position: absolute;*/
     /*left: 0;*/
     /*top:0;*/
   }
-  .contentTable .el-table .el-table__header-wrapper{
+
+  .contentTable .el-table .el-table__header-wrapper {
     /*高度自适应*/
     /*height: auto!important;*/
   }
-  .contentTable .el-table .el-table__body-wrapper{
-    flex: 1!important;
+
+  .contentTable .el-table .el-table__body-wrapper {
+    flex: 1 !important;
   }
 
-  .contentTable .l-btn-text{
+  .contentTable .l-btn-text {
     /*line-height: 25px!important;*/
   }
-  .contentTable .el-table__body-wrapper{
+
+  .contentTable .el-table__body-wrapper {
     /*background: red!important;*/
     /*height: auto;*/
     /*height: 90%!important;*/

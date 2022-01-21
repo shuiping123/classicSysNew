@@ -6,17 +6,17 @@ const state = {
    * 当前是否是登录状态
    * @value login/logout
    * */
-  logState:'login',
+  logState: 'login',
   /**
    * 当前登录的用户权限
    * nav 当前可访问的目录导航
    * usrInfo 当前用户的信息
    * optionRole 操作权限
    * */
-  UsrRole:{
-    nav:[],
-    usrInfo:{},
-    optionRole:{}
+  UsrRole: {
+    nav: [],
+    usrInfo: {},
+    optionRole: {}
   },
   // /**
   //  * 判定loading是否显示
@@ -35,20 +35,20 @@ const state = {
 
 const mutations = {
   // 修改登录状态
-  changeLogState(state,data){
-    state.logState=data;
+  changeLogState(state, data) {
+    state.logState = data;
   },
   // 修改用户权限
-  changeUsrRole(state,data){
-    let {nav} = data;
-    Vue.set(state.UsrRole,'nav',nav)
-    if (data.nav.length>0){
-       resetRouter(data.nav);
-    }else {
-      resetRouter(data.nav);
-    }
+  changeUsrRole(state, data) {
+    let {nav,ADId,UsrId,DepName,UsrName,UsrRoleId,UsrRealName,RoleName,UsrState,Auth} = data;
+    nav = nav.length > 0 ? nav : [];
+    Vue.set(state.UsrRole, 'nav', nav)
+    resetRouter(nav);
+    Vue.set(state.UsrRole, 'usrInfo', {
+      ADId,UsrId,DepName,UsrName,UsrRoleId,UsrRealName,RoleName,UsrState
+    });
 
-
+    Vue.set(state.UsrRole, 'optionRole', Auth);
   },
   // // 是否显示loading弹框
   // showLoading(state,data){
