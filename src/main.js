@@ -38,7 +38,10 @@ import 'vx-easyui/dist/themes/icon.css';
 import 'vx-easyui/dist/themes/vue.css';
 import EasyUI from 'vx-easyui';
 Vue.use(EasyUI);
-
+import formMine from  '@/components_coment/formMine'
+import formItemMine from  '@/components_coment/formItemMine'
+Vue.component('formMine',formMine)
+Vue.component('formItemMine',formItemMine)
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

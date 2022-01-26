@@ -21,3 +21,11 @@
   border:none;
   background: none;
 }
+
+/*修改弹框的通用样式*/
+.el-dialog__body{
+  padding: 0 20px 10px 20px;
+}
+.el-form-item--mini.el-form-item{
+  margin-bottom:5px;
+}

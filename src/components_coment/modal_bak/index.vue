@@ -1,8 +1,19 @@
 <template>
   <!--弹框-->
-  <el-dialog title="收货地址" :visible.sync="dialogTableVisible">
-
-  </el-dialog>
+  <Dialog ref="modal"
+          :closed="true"
+          :title="modalTitle"
+          :dialogStyle="modalStyle"
+          :modal="true"
+          :closable="showHeadClose"
+          :draggable="true"
+          :resizable="true">
+    <form ref="form" @submit.prevent style="height: 100%;display: flex;flex-direction: column">
+      <div style="flex:1;">
+        <slot name="modalContent"></slot>
+      </div>
+    </form>
+  </Dialog>
 </template>
 
 <script>
@@ -11,7 +22,9 @@
     name: "index",
     data() {
       return {
-        dialogTableVisible:false,
+        modalTitle:'标题',
+        modalStyle:{width:'400px'},
+        showHeadClose:false,
       }
     },
     mounted() {

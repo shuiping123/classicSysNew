@@ -392,5 +392,92 @@ export const tree = {
         params: data,
       })
     },
+    // 点击树形图右键菜单
+    changeMenu(node){
+      let clickNode = node[node.length-1];
+      let {OCFId,id}=this.rightNode_sideTree;
+      // console.log(111,this.rightNode_sideTree)
+      // return false;
+      switch (clickNode) {
+        case 'addFolder':
+          this.$set(this.folderForm,'type','add');
+          this.$set(this.folderForm,'showFolderModal',true);
+          this.$set(this.folderForm,'title','添加文件夹');
+          this.clearFolderModal(OCFId);
+          break;
+        case 'addPro':
+         this.getProAttr(0,OCFId,id,'add');
+          break;
+        case 'edit':
+          /// Folder=根目录，右侧不显示
+          /// NoHPro=无项目文件夹，右侧显示条目标签
+          /// HPro_Self=文件夹节点，其下有项目，项目用自己的归档范围，点击时：右侧刷新显示项目、条目列表；
+          /// HPro_Public=文件夹节点，其下有项目,项目用公共的归档范围，点击时：右侧刷新显示项目、条目列表；
+          if (this.rightNode_sideTree.Type=='Folder'||this.rightNode_sideTree.Type=='NoHPro'||this.rightNode_sideTree.Type=='HPro_Self'||this.rightNode_sideTree.Type=='HPro_Public'){
+            // let {OCFId,id}=this.rightNode_sideTree;
+            request({
+              url:this.$collections.fileManager.getFolderInfo,
+              params:{
+                ty:'GetFolderLstById',
+                Id:id
+              }
+            }).then(res=>{
+              if(res.reCode==0){
+                this.$set(this.folderForm,'type','edit');
+                this.$set(this.folderForm,'showFolderModal',true);
+                this.$set(this.folderForm,'title','修改文件夹');
+
+                this.$set(this.folderForm,'formContent', this.folderForm.formContent.map(item => {
+                  switch(item.prop){
+                    case 'FolderName':
+                      item.value=res.reData.FolderName;
+                      break;
+                    case 'FolderCode':
+                      item.value=res.reData.FolderCode;
+                      break;
+                    // case 'ScrClsJson':
+                    //   item.value=res.reData.ScrClsJson.split(',');
+                    //   break;
+                    // case 'StorageId':
+                    //   item.value=res.reData.StorageId;
+                    //   break;
+                    case 'FolderTotalDay_Brw':
+                      item.value=res.reData.FolderTotalDay_Brw;
+                      break;
+                    case 'FolderTotalDay_Ren':
+                      item.value=res.reData.FolderTotalDay_Ren;
+                      break;
+                  }
+                  return item;
+                }));
+                this.$set(this.folderForm.other, 'HavePro', res.reData.HavePro);
+                this.$set(this.folderForm.other, 'id', res.reData.FolderId);
+                this.getMjData(OCFId,res.reData.ScrClsJson.split(',').map(item=>{return parseInt(item)}));// 密级下拉菜单
+                this.getKeepDateData(OCFId,res.reData.StorageId);// 保管年限下拉菜单
+                this.getTypeModuleData(OCFId, res.reData.AttrTypeId.split(',').map(item=>{return parseInt(item)}), this.getViewTmpData(res.reData.AttrTypeId.split(','),res.reData.TmpIds.split(',')));// 分类模板下拉菜单
+                this.$set(this.folderForm.other.proInfo, 'proTableData', res.reData1.proTableData);
+                this.$set(this.folderForm.other.proInfo, 'proTableData_pre', res.reData1.proTableData_pre);
+                this.$set(this.folderForm.other.itemInfo, 'itemTableData', res.reData1.itemTableData);
+                this.$set(this.folderForm.other.itemInfo, 'itemTableData_pre', res.reData1.itemTableData_pre);
+              }else{
+                this.$current.alertMine(res.reMsg);
+              }
+            })
+          }else {
+            this.getProAttr(id,OCFId,0,'edit');
+          }
+          break;
+        case 'del':
+          break;
+        case 'refresh':
+          break;
+        case 'sort':
+          break;
+      }
+    },
+    // 刷新某个节点的下级
+    refreshTreeNode(node){
+
+    }
   }
 }
