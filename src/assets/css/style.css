@@ -1,7 +1,6 @@
 
 .form-inline{
   display: flex;
-
 }
 
 /*占满容器*/
@@ -29,3 +28,77 @@
 .el-form-item--mini.el-form-item{
   margin-bottom:5px;
 }
+
+/*修改element复选框样式*/
+.el-checkbox__label{
+  padding-left:5px!important;
+  font-size: 12px!important;
+}
+
+.hide{
+  display:none;
+}
+
+/**************************拖拽上传的样式***************************/
+.el-upload-mine {
+  display: inline-block;
+  text-align: center;
+  cursor: pointer;
+  outline: 0;
+  width:100%;
+}
+.el-upload-dragger-mine {
+  background-color: #fff;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  width: 100%;
+  height: 180px;
+  /*line-height:180px;*/
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  display:flex;
+  align-items:center;
+  justify-items: center;
+}
+
+.el-upload-dragger-mine:focus {
+  border: #409eff 1px dashed;
+}
+
+.el-upload-dragger-mine:hover {
+  border: #409eff 1px dashed;
+}
+
+.el-upload-dragger-mine .el-upload__text-mine em {
+  color: #409eff;
+  font-style: normal;
+}
+
+.el-upload--picture-card-mine, .el-upload-dragger-mine {
+  -webkit-box-sizing: border-box;
+  cursor: pointer;
+
+}
+.el-upload-dragger-mine .el-icon-upload-mine {
+  font-size: 67px;
+  color: #C0C4CC;
+  margin: 40px 0 16px;
+  line-height:50px;
+}
+.el-upload-dragger-mine .el-upload__text-mine {
+  color: #606266;
+  font-size: 14px;
+  text-align: center;
+}
+.el-upload__tip-mine {
+  font-size: 12px;
+  color: #606266;
+  margin-top: 7px;
+}
+/**************************拖拽上传的样式***************************/
+
+
+

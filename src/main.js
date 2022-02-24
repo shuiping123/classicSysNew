@@ -17,8 +17,10 @@ import router from './router'
 
 import current from '@/assets/js/current';
 import collections from '@/assets/js/collections';
+import config from '@/assets/js/config';
 Vue.prototype.$current=current;
 Vue.prototype.$collections=collections;
+Vue.prototype.$config=config;
 
 import './icons' // icon
 import './permission' // permission control

@@ -37,11 +37,11 @@
                              :width="item.width"
                              :min-width="item.minWidth">
               <div slot-scope="scope" style="display: flex;align-items: center;">
-                    <div v-html="item.template"></div>
-              <span v-if="item.template" :class="chooseIcon(scope.row,scope.row[item.template])"
-                    style="display: inline-block;width: 16px;height: 16px;overflow: hidden;"></span>
-                <span style="display: inline-block;flex: 1;"
-                      :style="{'margin-left': item.template?'10px':0,height: item.template?'18px':''}">{{scope.row[item.prop]}}</span>
+                    <!--<div v-html="item.template"></div>-->
+              <div v-if="item.template" :class="chooseIcon(scope.row,scope.row[item.template])"
+                    style="display: inline-block;width: 16px;height: 16px;overflow: hidden;"></div>
+                <div style="display: inline-block;flex: 1;overflow: hidden;text-overflow: ellipsis;"
+                      :style="{'margin-left': item.template?'10px':0,height: item.template?'18px':''}">{{scope.row[item.prop]}}</div>
               </div>
               <!--<template v-if="item.template" slot-scope="scope">-->
               <!--  <ex-slot :row="scope.row"></ex-slot>-->
@@ -285,6 +285,9 @@
             cls = 'tree-folder-open';
             break;
           case 'PriFolder':
+            cls = 'tree-folder-open';
+            break;
+          case 'FileFolder':
             cls = 'tree-folder-open';
             break;
           case 'Item':

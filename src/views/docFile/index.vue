@@ -18,16 +18,16 @@
         </el-card>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;"
-           v-if="selection&&(selection.Type!='Folder'&&selection.Type!='CFolder')">
+           v-if="selection&&(selection.Type!='Folder'&&selection.Type!='CFolder')&&selection.id">
         <tab-mine :data="tabsList" :active_tab.sync="activeName"></tab-mine>
         <div style="flex:1;width:100%;">
           <!--项目表-->
           <table-content
             v-if="activeName=='pro'"
             filter="tablePro"
+            @rightClick="rightClick_pro"
             @cell-click="cellClick_pro"
             @row-dbclick="dbclickFun_pro"
-            @reloadTableForThisPage="reloadTableForThisPage_pro"
             :page_bottom="true"
             :page_head="true"
             :data="tableData_pro">
@@ -36,10 +36,14 @@
                 <el-input v-model="search_pro.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
                 <el-input v-model="search_pro.code" size="mini" class="tableInputText" placeholder="请输入项目编号"></el-input>
                 <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn" circle
+                           @click="searchFun_pro"
                            plain></el-button>
                 <el-button type="primary" icon="el-icon-close" size="mini" class="tableInputCircleBtn" circle
+                           @click="clearSeachFun_pro"
                            plain></el-button>
-                <el-button type="primary" size="mini" class="tableInputBtn" plain>添加</el-button>
+                <el-button type="primary" size="mini" class="tableInputBtn" plain :disabled="!showAddButton_pro"
+                           @click="addProInfo">添加
+                </el-button>
                 <el-button type="danger" size="mini" class="tableInputBtn" plain>批量删除</el-button>
               </div>
             </div>
@@ -48,9 +52,10 @@
           <table-content
             v-if="activeName=='item'"
             filter="tableItem"
+            @rightClick="rightClick_item"
             @cell-click="cellClick_item"
             @row-dbclick="dbclickFun_item"
-            @reloadTableForThisPage="reloadTableForThisPage_item"
+            @handleSelectionChange="multipleSelection_item=$event"
             :page_bottom="true"
             :page_head="true"
             :data="tableData_item">
@@ -58,14 +63,26 @@
               <div style="padding:7px 0;align-items: center;" class="form-inline">
                 <el-input v-model="search_item.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
                 <el-input v-model="search_item.code" size="mini" class="tableInputText"
-                          placeholder="请输入条目编号"></el-input>
+                          placeholder="请输入档案号"></el-input>
                 <el-checkbox v-model="search_item.isHaveFile" size="mini" class="tableInputCheck">包含电子文件</el-checkbox>
+                <!--搜索-->
                 <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn" circle
+                           @click="searchFun_item"
                            plain></el-button>
+                <!--取消搜索-->
                 <el-button type="primary" icon="el-icon-close" size="mini" class="tableInputCircleBtn" circle
+                           @click="clearSeachFun_item"
                            plain></el-button>
-                <el-button type="primary" size="mini" class="tableInputBtn" plain>添加</el-button>
-                <el-button type="danger" size="mini" class="tableInputBtn" plain>批量删除</el-button>
+                <!--添加-->
+                <el-button type="primary" size="mini" class="tableInputBtn"
+                           @click="getItemAttr_first" :disabled="!showAddButton_item"
+                           plain>添加
+                </el-button>
+                <el-button type="danger" size="mini" class="tableInputBtn"
+                           :disabled="!showDelButton_item"
+                           @click="delItems"
+                           plain>批量删除
+                </el-button>
               </div>
             </div>
           </table-content>
@@ -73,15 +90,25 @@
           <table-content
             v-if="activeName=='vol'"
             filter="tableVol"
-            @cell-click="cellClick"
-            @row-dbclick="dbclickFun"
-            @reloadTableForThisPage="reloadTableForThisPage_pro"
+            @cell-click="cellClick_vol"
+            @row-dbclick="dbclickFun_vol"
             :page_bottom="true"
             :page_head="true"
-            :data="tableData_pro">
+            :data="tableData_vol">
             <div slot="t_header">
-              <div style="height: 30px">
-
+              <div style="padding:7px 0;align-items: center;" class="form-inline">
+                <el-input v-model="search_item.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
+                <el-input v-model="search_item.code" size="mini" class="tableInputText"
+                          placeholder="请输入档案号"></el-input>
+                <el-checkbox v-model="search_item.isHaveFile" size="mini" class="tableInputCheck">包含电子文件</el-checkbox>
+                <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn" circle
+                           @click="searchFun_vol"
+                           plain></el-button>
+                <el-button type="primary" icon="el-icon-close" size="mini" class="tableInputCircleBtn" circle
+                           @click="clearSeachFun_vol"
+                           plain></el-button>
+                <el-button type="primary" size="mini" class="tableInputBtn" plain>添加</el-button>
+                <el-button type="danger" size="mini" class="tableInputBtn" plain>批量删除</el-button>
               </div>
             </div>
           </table-content>
@@ -89,15 +116,23 @@
           <table-content
             v-if="activeName=='file'"
             filter="tableFile"
-            @cell-click="cellClick"
-            @row-dbclick="dbclickFun"
-            @reloadTableForThisPage="reloadTableForThisPage_pro"
+            @rightClick="rightClick_file"
+            @cell-click="cellClick_file"
+            @row-dbclick="dbclickFun_file"
             :page_bottom="true"
             :page_head="true"
-            :data="tableData_pro">
+            :data="tableData_file">
             <div slot="t_header">
-              <div style="height: 30px">
-
+              <div style="padding:7px 0;align-items: center;" class="form-inline">
+                <el-input v-model="search_file.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
+                <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn" circle
+                           plain></el-button>
+                <el-button type="primary" icon="el-icon-close" size="mini" class="tableInputCircleBtn" circle
+                           plain></el-button>
+                <el-button type="primary" size="mini" class="tableInputBtn" @click="uploadFun_file" :disabled="!showUploadButton_file" plain>
+                  上传
+                </el-button>
+                <el-button type="danger" size="mini" class="tableInputBtn" plain>批量下载</el-button>
               </div>
             </div>
           </table-content>
@@ -117,7 +152,8 @@
         <form-item-mine
           v-for="item in folderForm.formContent"
           :label="item.name+(item.required?' *':'')">
-          <el-input size="mini" style="width:250px" v-if="item.type=='text'" :required="item.required" v-model="item.value"
+          <el-input size="mini" style="width:250px" v-if="item.type=='text'" :required="item.required"
+                    v-model="item.value"
                     :placeholder="item.placeholder"></el-input>
           <el-input-number size="mini" v-else-if="item.type=='number'" :step="1" :required="item.required"
                            v-model.number="item.value"></el-input-number>
@@ -178,9 +214,10 @@
       <div style="width:100%;" class="form-inline">
         <div style="padding:10px;">
           <div class="title">选中项</div>
-          <el-table @selection-change="changeSelectPro" :data="folderForm.other.proInfo.proTableData" height="400" border size="mini" style="width: 100%">
+          <el-table @selection-change="changeSelectPro" :data="folderForm.other.proInfo.proTableData" height="400"
+                    border size="mini" style="width: 100%">
             <el-table-column type="selection" width="40"/>
-            <el-table-column  prop="AttrName" label="标题" width="120"/>
+            <el-table-column prop="AttrName" label="标题" width="120"/>
             <el-table-column prop="WithPx" label="宽度" width="170">
               <template slot-scope="scope">
                 <el-input-number size="mini" v-model="scope.row.WithPx" :step="10"></el-input-number>
@@ -189,7 +226,8 @@
             <el-table-column label="操作" width="120">
               <template slot-scope="scope">
                 <el-tag size="mini" @click="upRow(scope.$index,scope.row,'pro')"><i class="el-icon-top"></i></el-tag>
-                <el-tag size="mini" @click="downRow(scope.$index,scope.row,'pro')" style="margin-left: 5px"><i class="el-icon-bottom"></i></el-tag>
+                <el-tag size="mini" @click="downRow(scope.$index,scope.row,'pro')" style="margin-left: 5px"><i
+                  class="el-icon-bottom"></i></el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -215,24 +253,29 @@
           <!--</div>-->
         </div>
         <div style="padding:10px;">
-          <el-table @selection-change="changeSelectPro_pre" :data="folderForm.other.proInfo.proTableData_pre" height="400" size="mini" border style="width: 100%">
+          <div class="title">待选项</div>
+          <el-table @selection-change="changeSelectPro_pre" :data="folderForm.other.proInfo.proTableData_pre"
+                    height="400" size="mini" border style="width: 100%">
             <el-table-column type="selection" width="40"/>
             <el-table-column prop="AttrName" label="标题" width="135"/>
           </el-table>
         </div>
       </div>
       <div style="text-align: center;width:100%;margin-top: 10px;">
-        <el-button type="primary" size="mini"  @click="$set(folderForm.other.proInfo,'showModal',false)">确定</el-button>
+        <el-button type="primary" size="mini" @click="$set(folderForm.other.proInfo,'showModal',false)">确定</el-button>
         <el-button size="mini" @click="$set(folderForm.other.proInfo,'showModal',false)">取消</el-button>
       </div>
     </el-dialog>
     <!--条目相关维护-->
-    <el-dialog width="780px" :title="folderForm.other.itemInfo.title" :visible.sync="folderForm.other.itemInfo.showModal">
+    <el-dialog width="780px" :title="folderForm.other.itemInfo.title"
+               :visible.sync="folderForm.other.itemInfo.showModal">
       <div style="width:100%;" class="form-inline">
         <div style="padding:10px;">
-          <el-table @selection-change="changeSelectItem" :data="folderForm.other.itemInfo.itemTableData" height="400" border size="mini" style="width: 100%">
+          <div class="title">选中项</div>
+          <el-table @selection-change="changeSelectItem" :data="folderForm.other.itemInfo.itemTableData" height="400"
+                    border size="mini" style="width: 100%">
             <el-table-column type="selection" width="40"/>
-            <el-table-column  prop="AttrName" label="标题" width="120"/>
+            <el-table-column prop="AttrName" label="标题" width="120"/>
             <el-table-column prop="WithPx" label="宽度" width="170">
               <template slot-scope="scope">
                 <el-input-number size="mini" v-model="scope.row.WithPx" :step="10"></el-input-number>
@@ -241,7 +284,8 @@
             <el-table-column label="操作" width="120">
               <template slot-scope="scope">
                 <el-tag size="mini" @click="upRow(scope.$index,scope.row,'item')"><i class="el-icon-top"></i></el-tag>
-                <el-tag size="mini" @click="downRow(scope.$index,scope.row,'item')" style="margin-left: 5px"><i class="el-icon-bottom"></i></el-tag>
+                <el-tag size="mini" @click="downRow(scope.$index,scope.row,'item')" style="margin-left: 5px"><i
+                  class="el-icon-bottom"></i></el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -267,14 +311,16 @@
           <!--</div>-->
         </div>
         <div style="padding:10px;">
-          <el-table @selection-change="changeSelectItem_pre" :data="folderForm.other.itemInfo.itemTableData_pre" height="400" size="mini" border style="width: 100%">
+          <div class="title">待选项</div>
+          <el-table @selection-change="changeSelectItem_pre" :data="folderForm.other.itemInfo.itemTableData_pre"
+                    height="400" size="mini" border style="width: 100%">
             <el-table-column type="selection" width="40"/>
             <el-table-column prop="AttrName" label="标题" width="135"/>
           </el-table>
         </div>
       </div>
       <div style="text-align: center;width:100%;margin-top: 10px;">
-        <el-button type="primary" size="mini"  @click="$set(folderForm.other.itemInfo,'showModal',false)">确定</el-button>
+        <el-button type="primary" size="mini" @click="$set(folderForm.other.itemInfo,'showModal',false)">确定</el-button>
         <el-button size="mini" @click="$set(folderForm.other.itemInfo,'showModal',false)">取消</el-button>
       </div>
     </el-dialog>
@@ -282,16 +328,20 @@
     <!--添加项目-->
     <el-dialog width="470px" :title="proForm.title" :visible.sync="proForm.showModal">
       <form-mine @submit="submit_pro" ref="folderForm" size="mini" label-width="140px">
-        <form-item-mine label="上级目录" v-if="proForm.type=='add'&&rightNode_sideTree">
-          {{rightNode_sideTree.text}}
+        <form-item-mine label="上级目录" v-if="proForm.type=='add'&&selection">
+          {{selection.text}}
         </form-item-mine>
         <form-item-mine
           v-for="item in proForm.formContent"
           :label="item.name+(item.require?' *':'')">
-          <el-input size="mini" style="width:250px" v-if="item.type=='txt'" :disabled="item.isdisable" :required="item.require"  v-model="item.defvalue"/>
-          <el-input-number size="mini" v-else-if="item.type=='int'" :disabled="item.isdisable" :step="1" :required="item.require" v-model.number="item.defvalue"/>
-          <el-input-number size="mini" v-else-if="item.type=='float'" :disabled="item.isdisable" :step="0.1" :required="item.require" v-model.number="item.defvalue"/>
-          <el-select size="mini" style="width:250px" v-else-if="item.type=='select'" :disabled="item.isdisable" v-model="item.defvalue" collapse-tags>
+          <el-input size="mini" style="width:250px" v-if="item.type=='txt'" :disabled="item.isdisable"
+                    :required="item.require" v-model="item.defvalue"/>
+          <el-input-number size="mini" v-else-if="item.type=='int'" :disabled="item.isdisable" :step="1"
+                           :required="item.require" v-model.number="item.defvalue"/>
+          <el-input-number size="mini" v-else-if="item.type=='float'" :disabled="item.isdisable" :step="0.1"
+                           :required="item.require" v-model.number="item.defvalue"/>
+          <el-select size="mini" style="width:250px" v-else-if="item.type=='select'" :disabled="item.isdisable"
+                     v-model="item.defvalue" collapse-tags>
             <el-option
               v-for="item in item.data"
               :key="item.value"
@@ -299,7 +349,8 @@
               :value="item.value">
             </el-option>
           </el-select>
-          <el-select size="mini" style="width:250px" v-else-if="item.type=='mulSelect'" :disabled="item.isdisable" v-model="item.defvalue" :multiple="true" collapse-tags>
+          <el-select size="mini" style="width:250px" v-else-if="item.type=='mulSelect'" :disabled="item.isdisable"
+                     v-model="item.defvalue" :multiple="true" collapse-tags>
             <el-option
               v-for="item in item.data"
               :key="item.value"
@@ -307,21 +358,371 @@
               :value="item.value">
             </el-option>
           </el-select>
-          <el-date-picker size="mini" style="width:250px" v-else-if="item.type=='date'" :disabled="item.isdisable" v-model="item.defvalue" :required="item.require" type="date" placeholder="选择日期"/>
+          <el-date-picker size="mini" style="width:250px" v-else-if="item.type=='date'" value-format="yyyy-MM-dd"
+                          :disabled="item.isdisable" v-model="item.defvalue" :required="item.require" type="date"
+                          placeholder="选择日期"/>
 
         </form-item-mine>
-        <form-item-mine>
+        <div style="width:100%;text-align: center">
           <el-button size="mini" type="primary" native-type="submit">确定</el-button>
-          <el-button size="mini" @click="$set(folderForm,'showFolderModal',false)">取消</el-button>
-        </form-item-mine>
+          <el-button size="mini" @click="$set(proForm,'showModal',false)">取消</el-button>
+        </div>
       </form-mine>
     </el-dialog>
 
+    <!--删除文件夹提示-->
+    <el-dialog width="470px" title="删除文件夹提示" :visible.sync="delModal_folder.show">
+      <form @submit.prevent="submit_del_folder">
+        <div><span>{{delModal_folder.tip}}</span></div>
+        <div style="padding:10px 0;">删除理由：</div>
+        <el-input
+          required
+          type="textarea"
+          :rows="2"
+          placeholder="请输入内容"
+          v-model="delModal_folder.desc">
+        </el-input>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(delModal_folder,'show',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+    <!--删除项目提示 - 右键-->
+    <el-dialog width="470px" title="删除项目提示" :visible.sync="delModal_pro.show">
+      <form @submit.prevent="submit_del_pro_tree">
+        <div><span>{{delModal_pro.tip}}</span></div>
+        <div style="padding:10px 0;">删除理由：</div>
+        <el-input
+          required
+          type="textarea"
+          :rows="2"
+          placeholder="请输入内容"
+          v-model="delModal_pro.desc">
+        </el-input>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(delModal_pro,'show',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+    <!--下级节点排序弹框-->
+    <el-dialog width="350px" title="下级节点排序" :visible.sync="nodeSort.show">
+      <form @submit.prevent="submit_nodeSort">
+        <el-table :data="nodeSort.data" height="250" border style="width: 100%">
+          <el-table-column prop="text" label="名称" width="180"></el-table-column>
+          <el-table-column label="操作">
+            <template slot-scope="scope">
+              <el-tag size="mini" @click="upRow(scope.$index,scope.row,'sort')"><i class="el-icon-top"></i></el-tag>
+              <el-tag size="mini" @click="downRow(scope.$index,scope.row,'sort')" style="margin-left: 5px"><i
+                class="el-icon-bottom"></i></el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(nodeSort,'show',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+    <!--添加条目 第一个弹框 有项目文件夹 大类小类树形图-->
+    <el-dialog width="750px" title="选择分类" :visible.sync="itemForm.first.havProShow">
+      <form @submit.prevent="submit_chooseCls_item">
+        <div style="width:100%;height:300px;overflow:auto;">
+          <Tree :data="itemForm.first.chooseClsData"
+                @selectionChange="$set(itemForm.first,'chooseClsValue',$event)"></Tree>
+        </div>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(itemForm.first,'havProShow',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+    <!--添加条目 第一个弹框 无项目文件夹 选择模板-->
+    <el-dialog width="350px" title="选择模板" :visible.sync="itemForm.first.noProShow">
+      <form @submit.prevent="submit_chooseTmp_item">
+        <el-select v-model="itemForm.first.chooseTmpValue" style="width:100%;" placeholder="请选择">
+          <el-option
+            v-for="item in itemForm.first.chooseTmpData"
+            :key="item.value"
+            :label="item.text"
+            :value="item.value">
+          </el-option>
+        </el-select>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(itemForm.first,'noProShow',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+    <!--添加条目/修改条目  第二个弹框-->
+    <el-dialog width="500px" :title="itemForm.second.type=='add'?'添加条目':'修改条目'" :visible.sync="itemForm.second.show">
+      <form-mine @submit="submit_item" ref="folderForm" size="mini" label-width="140px">
+        <div style="height:350px;overflow:auto">
+          <form-item-mine
+            v-for="(item,key) in itemForm.second.formContent"
+            :label="item.name+(item.require?' *':'')">
+            <template v-if="!item.isdisable">
+              <el-input size="mini" style="width:250px" v-if="item.type=='txt'&&item.prop!='ItemArchNo'"
+                        :disabled="item.isdisable"
+                        :required="item.require" v-model="item.defvalue"/>
+              <template v-else-if="item.type=='txt'&&item.prop=='ItemArchNo'">
+                <el-input size="mini" style="width:180px" :disabled="item.isdisable"
+                          :required="item.require" v-model="item.defvalue"/>
+                <el-button size="mini" @click="createCode_item" style="width:70px;" :loading="createCodeLoading_item">
+                  生成
+                </el-button>
+              </template>
+
+              <el-input-number size="mini" v-else-if="item.type=='int'" :disabled="item.isdisable" :step="1"
+                               :required="item.require" v-model.number="item.defvalue"/>
+              <el-input-number size="mini" v-else-if="item.type=='float'" :disabled="item.isdisable" :step="0.1"
+                               :required="item.require" v-model.number="item.defvalue"/>
+              <el-select size="mini" v-else-if="item.type=='select'" :key="'itemFormSecond'+item.prop+key"
+                         style="width:250px"
+                         v-model="item.defvalue" collapse-tags>
+                <el-option
+                  v-for="item in item.data"
+                  :key="item.value"
+                  :label="item.text"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+
+              <el-select size="mini" v-else-if="item.type=='mulSelect'" style="width:250px"
+                         v-model="item.defvalue" :multiple="true" collapse-tags>
+                <el-option
+                  v-for="item in item.data"
+                  :key="item.value"
+                  :label="item.text"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+
+              <el-date-picker size="mini" style="width:250px" v-else-if="item.type=='date'" value-format="yyyy-MM-dd"
+                              :disabled="item.isdisable" v-model="item.defvalue" :required="item.require" type="date"
+                              placeholder="选择日期"/>
+
+            </template>
+            <template v-else>
+              <div>{{item.deftext}}</div>
+            </template>
+
+          </form-item-mine>
+        </div>
+
+        <div style="width:100%;text-align:center">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(itemForm.second,'show',false)">取消</el-button>
+        </div>
+      </form-mine>
+    </el-dialog>
+
+    <!--删除条目提示 - 右键-->
+    <el-dialog width="470px" title="删除条目提示" :visible.sync="delModal_item.show">
+      <form @submit.prevent="submit_del_item">
+        <div><span>{{delModal_item.tip}}</span></div>
+        <div style="padding:10px 0;">删除理由：</div>
+        <el-input
+          required
+          type="textarea"
+          :rows="2"
+          placeholder="请输入内容"
+          v-model="delModal_item.desc">
+        </el-input>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(delModal_item,'show',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+
+    <!--删除条目提示 - 批量删除-->
+    <el-dialog width="470px" title="删除条目提示" :visible.sync="delModal_items.show">
+      <form @submit.prevent="submit_del_items">
+        <div><span>{{delModal_items.tip}}</span></div>
+        <div style="padding:10px 0;">删除理由：</div>
+        <el-input
+          required
+          type="textarea"
+          :rows="2"
+          placeholder="请输入内容"
+          v-model="delModal_items.desc">
+        </el-input>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(delModal_items,'show',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+
+    <!--电子文件 - 上传-->
+    <el-dialog width="800px" title="上传列表" :visible.sync="uploadModal_file.show">
+      <form @submit.prevent="submitFun_autoUpload">
+        <div>
+          <div style="height:100%;width:100%" class="upload-demo-mine">
+            <div class="form-inline el-upload-dragger-mine"
+                 v-loading="uploadModal_file.dragoverShow"
+                 element-loading-text="拖动至此区域，放置预传输列表"
+                 element-loading-spinner="el-icon-circle-plus"
+                 element-loading-background="rgba(255, 255, 255, 0.8)"
+                 @dragover.prevent="$set(uploadModal_file,'dragoverShow',true)"
+                 @blur.prevent="$set(uploadModal_file,'dragoverShow',false)"
+                 @mouseleave.prevent="$set(uploadModal_file,'dragoverShow',false)"
+                 @drop.prevent="uploadFun"
+                 style="width: 100%; height: 250px;position: relative">
+              <div style="width: 100%; height: 100%;padding:10px">
+                <div class="fileListDiv" style="width: 100%; height: 100%;overflow: auto;">
+                  <table style="border: none; width: 100%">
+                    <thead>
+                    <tr>
+                      <td style="width: 230px">名称</td>
+                      <td>路径</td>
+                      <!--<td style="width: 150px">版本号</td>-->
+                      <td style="width: 120px">状态</td>
+                    </tr>
+                    </thead>
+                    <tr
+                      v-for="(item, key) in fileListForView"
+                      :class="{ checkedLi: item.check }"
+                      @click="item.check = !item.check"
+                      :key="'file_up' + key">
+                      <td :title="item.name">{{ item.name }}</td>
+                      <td :title="item.path">{{ item.path }}</td>
+                      <!--<td-->
+                      <!--  :title="item.version"-->
+                      <!--  @dblclick="item.type = item.type == 'text' ? 'input' : 'text'">-->
+                      <!--  <template v-if="item.type == 'text'">{{item.version }}</template>-->
+                      <!--  <template v-else>-->
+                      <!--    <input type="text" @keyup.enter="item.type = item.type == 'text' ? 'input' : 'text'" style="width: 100%" v-model="item.version"/>-->
+                      <!--  </template>-->
+                      <!--</td>-->
+                      <td :title="item.msg">
+                        <el-link :underline="false" :type="
+                        item.state == 0? 'info'
+                          : item.state == 1
+                          ? 'success'
+                          : item.state == 2
+                          ? 'warning'
+                          : item.state == 3
+                          ? 'danger'
+                          : 'danger'
+                      "
+                        >{{ item.msg }}
+                        </el-link>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="el-upload__tip-mine">拖动到传输列表中，或点击【选择文件】或【选择文件夹】进行上传</div>
+          </div>
+          <el-button-group style="margin-top: 10px">
+            <el-button size="mini" type="primary" @click="triggerChooseFile">选择文件</el-button>
+            <input
+              type="file"
+              multiple="multiple"
+              class="hide"
+              id="fileId"
+              @change="getFile($event)"
+              ref="chooseFile_real"/>
+            <el-button size="mini" type="primary" @click="triggerChooseFolder">选择文件夹</el-button>
+            <input
+              type="file"
+              webkitdirectory
+              multiple="multiple"
+              class="hide"
+              id="folderId"
+              @change="getFolder($event)"
+              ref="chooseFolder_real"/>
+            <el-button size="mini" type="primary" @click="removeChoose('')">移除选中项</el-button>
+            <el-button size="mini" type="primary" @click="chooseAllFiles">全选</el-button>
+            <el-button size="mini" type="primary" @click="clearAllFiles">取消选择</el-button>
+          </el-button-group>
+          <div style="margin-top: 10px; width: 100%">
+            <form-mine class="margin-top" label-width="170px" size="mini" border>
+              <form-item-mine label="是否上传文件夹根目录：">
+                <div class="form-inline" style="width: 200px; align-items: center;">
+                  <label class="form-inline" style="align-items: center"><input type="radio" v-model="isUpRoot_upload" value="1"/>上传</label>
+                  <label class="form-inline" style="margin-left: 5px;align-items: center"><input type="radio" v-model="isUpRoot_upload" value="0"/>不上传</label>
+                </div>
+              </form-item-mine>
+              <form-item-mine label="PDF类型：" v-if="dbclickData_item&&dbclickData_item.IsDraw  == 1">
+                <div class="form-inline" style="width: 150px; align-items: center;">
+                  <label class="form-inline" style="align-items: center"><input
+                    type="radio"
+                    v-model="pdfType_upload"
+                    value="1"/>红章</label>
+                  <label class="form-inline" style="margin-left: 5px;align-items: center">
+                    <input
+                    type="radio"
+                    v-model="pdfType_upload"
+                    value="2"/>黑章</label>
+                </div>
+              </form-item-mine>
+            </form-mine>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(uploadModal_file,'show',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
+
+    <!--查看PDF-->
+    <el-dialog width="800px" title="查看PDF" :visible.sync="view_file.showPdf">
+      <form @submit.prevent>
+        <div style="width:100%" v-if="view_file.showPdf&&fileUrl">
+          <div style="text-align: center;">
+            <el-button-group>
+              <el-button type="primary" icon="el-icon-arrow-left" size="mini" @click="prePage">上一页</el-button>
+              <el-button type="primary" size="mini" @click="nextPage">下一页<i class="el-icon-arrow-right el-icon--right"></i>
+              </el-button>
+            </el-button-group>
+            <div style="margin-top: 10px; color: #409EFF">{{ pageNum_pdf }} / {{ pageTotalNum }}</div>
+          </div>
+          <div style="width:100%;height:500px;overflow: auto">
+            <pdf
+              :page="pageNum_pdf"
+              :src="fileUrl"
+              @progress="loadedRatio = $event"
+              @num-pages="pageTotalNum=$event"></pdf>
+            <!--<img src="static/test.JPG" style="width:100%;height:500px;" alt="">-->
+          </div>
+        </div>
+      </form>
+    </el-dialog>
+
+    <!--查看图片-->
+    <el-dialog width="800px" title="查看图片" :visible.sync="view_file.showImg">
+        <div @contextmenu.prevent>
+          <img v-if="fileType=='img'&&fileUrl" :src="fileUrl" width="100%;" alt="">
+        </div>
+    </el-dialog>
+
+    <!--查看excel-->
+    <el-dialog width="800px" title="查看表格" :visible.sync="view_file.showExcel">
+      <div @contextmenu.prevent style="width:100%;height:100%;">
+        <iframe v-if="fileType=='excel'&&fileUrl" :src="'static/extension/viewExcel/index.html?url=/'+fileUrl" style="width:100%;height:100%;overflow: auto" frameborder="0"></iframe>
+      </div>
+    </el-dialog>
 
   </div>
 </template>
 
 <script>
+  import pdf from 'vue-pdf'
+
   import tableContent from "@/components_coment/tableContent";
   import tabMine from "@/components_coment/tabMine";
   import rightMenu from "@/components_coment/rightMenu";
@@ -330,14 +731,18 @@
 
   import {tablePro} from './mixins/tablePro'
   import {tableItem} from './mixins/tableItem'
+  import {tableVol} from './mixins/tableVol'
+  import {tableFile} from './mixins/tableFile'
   import {tree} from './mixins/tree'
   import {navTabs} from './mixins/navTabs'
   import {modalOptions} from './mixins/modalOptions'
+  import {uploadOption} from './mixins/uploadOption'
+  import {viewFile} from './mixins/viewFile'
 
   export default {
     name: "index",
-    components: {tableContent, tabMine, rightMenu},
-    mixins: [tablePro, tableItem, tree, navTabs, modalOptions],
+    components: {pdf,tableContent, tabMine, rightMenu},
+    mixins: [tablePro, tableItem, tree, navTabs, modalOptions, tableVol, tableFile, uploadOption,viewFile],
     data() {
       return {}
     },
@@ -357,6 +762,26 @@
   .optionBtn .itemBtn {
     padding: 10px;
   }
+
+  .checkedLi {
+    background: #cde8ff;
+    color: #327daa;
+  }
+  .fileListDiv table {
+    width: 100px;
+    table-layout: fixed; /* 只有定义了表格的布局算法为fixed，下面td的定义才能起作用。 */
+  }
+
+  .fileListDiv table td {
+    width: 100%;
+    word-break: keep-all; /* 不换行 */
+    white-space: nowrap; /* 不换行 */
+    overflow: hidden; /* 内容超出宽度时隐藏超出部分的内容 */
+    text-overflow: ellipsis; /* 当对象内文本溢出时显示省略标记(...) ；需与overflow:hidden;一起使用*/
+    text-align: left;
+    padding-left:5px;
+  }
+
 </style>
 <style>
   .tableInputText {

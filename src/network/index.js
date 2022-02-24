@@ -9,7 +9,7 @@ export function request(config) {
     method: 'post',
     withCredentials: true,
     headers: {
-      'Content-Type': ' application/x-www-form-urlencoded',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
   });
   instance.interceptors.response.use(res => {
@@ -26,9 +26,9 @@ export function request(config) {
       return res.data;
     }
   }, error => {
-    current.alertMine(error)
+    current.alertMine(error);
     return false;
   });
-  return instance(config)
+  return instance(config);
 }
 

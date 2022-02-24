@@ -13,5 +13,23 @@ export const navTabs = {
   methods: {
     tabClickFun() {
     },
+    // 刷新整个右侧表格
+    refreshAllTables(){
+      if (this.selection){
+        // ============== 点击树形节点后加载表格 - 项目/条目 ===============
+        let node=this.selection;
+        // 初始化项目的查询条件 和 页码
+        this.$set(this.search_pro,'name','');
+        this.$set(this.search_pro,'code','');
+        this.$set(this.search_item,'name','');
+        this.$set(this.search_item,'code','');
+        this.$set(this.search_item,'isHaveFile',false);
+        this.reloadTableForThisPage_pro(node.id, node.Type,'','', 1);
+        this.reloadTableForThisPage_item(node.id, node.Type,'','', 1);
+        // 默认选中标签
+        this.activeName=this.tabsList.filter(item=>item.show)[0].name;
+        // ============== 点击树形节点后加载表格 - 项目/条目 ===============
+      }
+    }
   }
 }

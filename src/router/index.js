@@ -522,7 +522,7 @@ export default router
 
 // 路由守卫，跳转之前 - 检查登录
 router.beforeEach((to, from, next) => {
-  if (to.path !== '/login') {
+  if (to.path !== '/login'&&to.path.indexOf('static')==-1) {
     // 先检查是否登录了
     store.dispatch('user/checklog').then(()=>{
       // 如果登录了，且没有导航权限

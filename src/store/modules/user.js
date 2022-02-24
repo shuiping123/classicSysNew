@@ -106,20 +106,22 @@ const actions = {
     return new Promise((resolve, reject) => {
       checklog().then((res) => {
        if (res.reCode==2||res.reCode==1){
-         commit('SET_TOKEN', '')
-         commit('SET_ROLES', [])
-         removeToken()
+         commit('SET_TOKEN', '');
+         commit('SET_ROLES', []);
+         removeToken();
          // resetRouter()
          // commit('stateMine/changeUsrRole', {nav:[]},{ root: true });
          // commit('stateMine/changeLogState', 'logout',{ root: true })
-         dispatch('logout');
+         dispatch('tagsView/delAllViews', null, { root: true })
+         dispatch('logout').then(res=>{
+           resolve();
+         });
          // reset visited views and cached views
          // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
-         dispatch('tagsView/delAllViews', null, { root: true })
         }else{
          commit('stateMine/changeLogState', 'login',{ root: true })
+         resolve();
        }
-        resolve();
       }).catch(error => {
         reject(error)
       })

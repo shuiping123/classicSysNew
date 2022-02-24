@@ -116,7 +116,9 @@ export default {
       });
       if (node.length === 0) {
         treeSearch.map(item => {
-          searchForThis(propSearch, valueSearch, item[childNode]);
+          if (item[childNode]&&item[childNode].length > 0) {
+            searchForThis(propSearch, valueSearch, item[childNode]);
+          }
         })
       } else {
         node.map(item => {
