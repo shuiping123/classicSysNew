@@ -119,20 +119,25 @@
             @rightClick="rightClick_file"
             @cell-click="cellClick_file"
             @row-dbclick="dbclickFun_file"
+            @handleSelectionChange="multipleSelection_file=$event"
             :page_bottom="true"
             :page_head="true"
             :data="tableData_file">
             <div slot="t_header">
               <div style="padding:7px 0;align-items: center;" class="form-inline">
                 <el-input v-model="search_file.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
-                <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn" circle
+                <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn"
+                           @click="reloadTableForThisPage_file(search_file.id,search_file.Type,search_file.name,1)"
+                           circle
                            plain></el-button>
                 <el-button type="primary" icon="el-icon-close" size="mini" class="tableInputCircleBtn" circle
+                           @click="clearSeachFun_file"
                            plain></el-button>
                 <el-button type="primary" size="mini" class="tableInputBtn" @click="uploadFun_file" :disabled="!showUploadButton_file" plain>
                   上传
                 </el-button>
-                <el-button type="danger" size="mini" class="tableInputBtn" plain>批量下载</el-button>
+                <el-button type="primary" size="mini" class="tableInputBtn" @click="downFilesFun" plain>批量下载</el-button>
+                <el-button type="danger" size="mini" class="tableInputBtn" @click="delFiles" plain>批量删除</el-button>
               </div>
             </div>
           </table-content>
@@ -542,6 +547,25 @@
       </form>
     </el-dialog>
 
+    <!--删除电子文件提示-->
+    <el-dialog width="470px" title="删除提示" :visible.sync="tipModal_file.delTipShow">
+      <form @submit.prevent="realDelFile(tipModal_file.delData)">
+        <div><span>确定删除电子文件吗？如确认删除，请填写删除理由后提交。</span></div>
+        <div style="padding:10px 0;">删除理由：</div>
+        <el-input
+          required
+          type="textarea"
+          :rows="2"
+          placeholder="请输入内容"
+          v-model="tipModal_file.desc">
+        </el-input>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary" native-type="submit">确定</el-button>
+          <el-button size="mini" @click="$set(tipModal_file,'delTipShow',false)">取消</el-button>
+        </div>
+      </form>
+    </el-dialog>
+
 
     <!--删除条目提示 - 批量删除-->
     <el-dialog width="470px" title="删除条目提示" :visible.sync="delModal_items.show">
@@ -564,7 +588,7 @@
 
 
     <!--电子文件 - 上传-->
-    <el-dialog width="800px" title="上传列表" :visible.sync="uploadModal_file.show">
+    <el-dialog width="900px" title="上传列表" :visible.sync="uploadModal_file.show">
       <form @submit.prevent="submitFun_autoUpload">
         <div>
           <div style="height:100%;width:100%" class="upload-demo-mine">
@@ -585,7 +609,7 @@
                     <tr>
                       <td style="width: 230px">名称</td>
                       <td>路径</td>
-                      <!--<td style="width: 150px">版本号</td>-->
+                      <td style="width: 150px">根目录</td>
                       <td style="width: 120px">状态</td>
                     </tr>
                     </thead>
@@ -596,6 +620,12 @@
                       :key="'file_up' + key">
                       <td :title="item.name">{{ item.name }}</td>
                       <td :title="item.path">{{ item.path }}</td>
+                      <td :title="item.path?item.path.split('/')[0]:''">
+                        <div class="form-inline" v-if="item.path">
+                          <div style="width:15px;" class="icon-folder-mine"></div>
+                          <div class="ellipsisText" style="flex:1;margin-left:2px;">{{ item.path?item.path.split('/')[0]:'' }}</div>
+                        </div>
+                      </td>
                       <!--<td-->
                       <!--  :title="item.version"-->
                       <!--  @dblclick="item.type = item.type == 'text' ? 'input' : 'text'">-->
@@ -623,7 +653,7 @@
                 </div>
               </div>
             </div>
-            <div class="el-upload__tip-mine">拖动到传输列表中，或点击【选择文件】或【选择文件夹】进行上传</div>
+            <div class="el-upload__tip-mine">请选择并拖动【文件】及【文件夹】至上传列表中，或通过下方【选择文件】或【选择文件夹】按钮操作上传</div>
           </div>
           <el-button-group style="margin-top: 10px">
             <el-button size="mini" type="primary" @click="triggerChooseFile">选择文件</el-button>
@@ -712,20 +742,51 @@
 
     <!--查看excel-->
     <el-dialog width="800px" title="查看表格" :visible.sync="view_file.showExcel">
-      <div @contextmenu.prevent style="width:100%;height:100%;">
+      <div @contextmenu.prevent style="width:100%;height:500px;">
         <iframe v-if="fileType=='excel'&&fileUrl" :src="'static/extension/viewExcel/index.html?url=/'+fileUrl" style="width:100%;height:100%;overflow: auto" frameborder="0"></iframe>
       </div>
     </el-dialog>
+
+    <!--查看Word文档-->
+    <el-dialog width="800px" title="查看Word文档" :visible.sync="view_file.showWord">
+      <div @contextmenu.prevent style="width:100%;">
+        <view-word v-if="fileType=='word'&&fileUrl" :url="fileUrl"></view-word>
+      </div>
+    </el-dialog>
+
+    <!--下载失败弹框-->
+    <el-dialog :width="(tipModal_file.errData&&tipModal_file.errData.data.length>0)?'600px':'350px'" title="提示信息" :visible.sync="tipModal_file.showErr">
+      <div>
+        <div>{{tipModal_file.errTip}}</div>
+        <div style="width:100%;height:300px;margin-top:10px;" v-if="tipModal_file.showErr&&tipModal_file.errData&&tipModal_file.errData.data.length>0">
+          <table-content
+            filter="tableFile_downErr"
+            :page_bottom="false"
+            :page_head="false"
+            :data="tipModal_file.errData">
+          </table-content>
+        </div>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary"
+                     v-if="tipModal_file.successData.length>0"
+                     @click="()=>{$set(tipModal_file,'showErr',false);keepFun_file();}">继续</el-button>
+          <el-button size="mini" @click="$set(tipModal_file,'showErr',false)">取消</el-button>
+        </div>
+      </div>
+    </el-dialog>
+
 
   </div>
 </template>
 
 <script>
+
   import pdf from 'vue-pdf'
 
   import tableContent from "@/components_coment/tableContent";
   import tabMine from "@/components_coment/tabMine";
   import rightMenu from "@/components_coment/rightMenu";
+  import viewWord from '@/components_coment/viewWord'
   // import formMine from "@/components_coment/formMine";
   // import formItemMine from "@/components_coment/formItemMine";
 
@@ -741,7 +802,7 @@
 
   export default {
     name: "index",
-    components: {pdf,tableContent, tabMine, rightMenu},
+    components: {pdf,tableContent, tabMine, rightMenu,viewWord},
     mixins: [tablePro, tableItem, tree, navTabs, modalOptions, tableVol, tableFile, uploadOption,viewFile],
     data() {
       return {}

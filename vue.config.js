@@ -24,7 +24,8 @@ module.exports = {
    * In most cases please use '/' !!!
    * Detail: https://cli.vuejs.org/config/#publicpath
    */
-  publicPath: '/',
+  publicPath: './',//build时使用
+  // publicPath: '/',//dev时使用
   outputDir: 'dist',
   assetsDir: 'static',
   lintOnSave: process.env.NODE_ENV === 'development',
@@ -32,7 +33,7 @@ module.exports = {
   devServer: {
     // host: "127.0.0.1", // can be overwritten by process.env.HOST
     port: port,
-    open: true,
+    open: false,
     overlay: {
       warnings: false,
       errors: true

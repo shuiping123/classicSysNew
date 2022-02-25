@@ -13,11 +13,12 @@ export const viewFile = {
         showPdf:false,
         showImg:false,
         showExcel:false,
+        showWord:false,
       }
     }
   },
   methods: {
-    openViewModal(){
+    openViewModalFun(){
       this.fileUrl='';//清空url
       switch (this.rightData_file.FileExt.toLowerCase()) {
         case ".pdf":
@@ -37,6 +38,12 @@ export const viewFile = {
           break;
         case ".svg":
           this.fileType='excel';
+          break;
+        case ".doc":
+          this.fileType='word';
+          break;
+        case ".docx":
+          this.fileType='word';
           break;
         default:
           this.$current.alertMine("该文件格式不支持预览。");
@@ -90,8 +97,10 @@ export const viewFile = {
               this.$set(this.view_file,'showExcel',true);
               break;
             case 'word':
-              // this.$refs.modalViewWord.open();
+              this.$set(this.view_file,'showWord',true);
               break;
+            default:
+              return false;
           }
           // this.fileUrl="static\\FileViews\\dms00414\\(10022_451)iDiscover_系统部署手册v3.0_20181212.pdf";
           this.fileUrl=res.reData;

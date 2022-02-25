@@ -24,6 +24,8 @@ export const navTabs = {
         this.$set(this.search_item,'name','');
         this.$set(this.search_item,'code','');
         this.$set(this.search_item,'isHaveFile',false);
+        this.$set(this.tabsList[2],'show',false);
+        this.$set(this.tabsList[3],'show',false);
         this.reloadTableForThisPage_pro(node.id, node.Type,'','', 1);
         this.reloadTableForThisPage_item(node.id, node.Type,'','', 1);
         // 默认选中标签

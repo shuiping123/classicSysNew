@@ -158,6 +158,11 @@
   background: url("./../images/logMine.png") no-repeat center center!important;
   background-size: 100% 100%!important;
 }
+/*文件夹图标*/
+.icon-folder-mine{
+  background: url("./../images/folder.png") no-repeat center center!important;
+  background-size: 100% 100%!important;
+}
 
 /*====================== 更换easyui图标 ==========================*/
 

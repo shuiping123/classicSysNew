@@ -29,6 +29,8 @@ export default {
     subDel_item:'Maintain/ItemLstMaintain.ashx',
     upFile:"FileUpload.ashx",
     getViewPdfUrl:"Index.ashx",
+    downFile:"FileDown.ashx",
+    delFile:"Maintain/ItemLstMaintain.ashx",
 
     getAttr:"AttributeInfo.ashx",
     getItemType:"DropSelData.ashx",

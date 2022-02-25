@@ -100,5 +100,11 @@
 }
 /**************************拖拽上传的样式***************************/
 
+/*字体样式 超出内容区域显示省略号*/
+.ellipsisText{
+  overflow: hidden;
+  text-overflow:ellipsis;
+  white-space: nowrap;
+}
 
 

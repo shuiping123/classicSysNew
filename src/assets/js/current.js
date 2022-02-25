@@ -37,20 +37,16 @@ export default {
    * @param callback 点击确定后的回调函数 非必填
    * */
   confirmMine(title, contentMsg, callback) {
-    let ok = context.$store.state.language === "zh" ? "确定" : "ok";
-    let cancel = context.$store.state.language === "zh" ? "取消" : "cancel";
-    context.$messager.confirm({
-      title: title,
-      msg: contentMsg,
-      ok: "确定",
-      cancel: '取消',
-      result: r => {
-        if (r) {
-          if (callback) {
-            callback();
-          }
-        }
-      }
+    // let ok = context.$store.state.language === "zh" ? "确定" : "ok";
+    // let cancel = context.$store.state.language === "zh" ? "取消" : "cancel";
+    context.$confirm(contentMsg, title, {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      callback()
+    }).catch(() => {
+
     });
   },
   /**

@@ -3,7 +3,7 @@ import {request} from '@/network'
 export const modalOptions = {
   data() {
     return {
-      loading:null,//记录全局loading的对象，不能通过直接修改loading的方式触发
+      loading: null,//记录全局loading的对象，不能通过直接修改loading的方式触发
       // 文件夹弹框相关
       folderForm: {
         id: '',// 当前修改的文件夹的id  添加时不验证，修改时需要写值
@@ -165,19 +165,19 @@ export const modalOptions = {
           // 选择分类数据
           chooseClsData: [],
           // 选择模板
-          chooseTmpValue:'',
+          chooseTmpValue: '',
           // 选择模板数据
           chooseTmpData: [],
         },
         // 第二个弹框 正式要提交的弹框
         second: {
           show: false,//是否显示弹框
-          type:'add',//添加add 修改edit
-          data:{
-            ClsId:'',
-            TmpId:'',
+          type: 'add',//添加add 修改edit
+          data: {
+            ClsId: '',
+            TmpId: '',
           },
-          formContent:[],//动态的提交条件
+          formContent: [],//动态的提交条件
         },
       },
       // 删除条目
@@ -214,6 +214,7 @@ export const modalOptions = {
     // 点击右键菜单
     changeMenu(node) {
       let clickNode = node[node.length - 1];
+      if (!clickNode)return false;
 
       // console.log(111,this.rightNode_sideTree)
       // return false;
@@ -273,13 +274,17 @@ export const modalOptions = {
                 }));
                 this.$set(this.folderForm.other, 'HavePro', res.reData.HavePro);
                 this.$set(this.folderForm.other, 'id', res.reData.FolderId);
-                this.getMjData(OCFId, res.reData.ScrClsJson.split(',').map(item => {
+                let {AttrTypeId, TmpIds, ScrClsJson} = res.reData;
+                AttrTypeId = AttrTypeId ? AttrTypeId.split(',') : [];
+                TmpIds = TmpIds ? TmpIds.split(',') : [];
+                ScrClsJson = ScrClsJson ? ScrClsJson.split(',') : [];
+                this.getMjData(OCFId, ScrClsJson.map(item => {
                   return parseInt(item)
                 }));// 密级下拉菜单
                 this.getKeepDateData(OCFId, res.reData.StorageId);// 保管年限下拉菜单
-                this.getTypeModuleData(OCFId, res.reData.AttrTypeId.split(',').map(item => {
+                this.getTypeModuleData(OCFId, AttrTypeId.map(item => {
                   return parseInt(item)
-                }), this.getViewTmpData(res.reData.AttrTypeId.split(','), res.reData.TmpIds.split(',')));// 分类模板下拉菜单
+                }), this.getViewTmpData(AttrTypeId, TmpIds));// 分类模板下拉菜单
                 this.$set(this.folderForm.other.proInfo, 'proTableData', res.reData1.proTableData);
                 this.$set(this.folderForm.other.proInfo, 'proTableData_pre', res.reData1.proTableData_pre);
                 this.$set(this.folderForm.other.itemInfo, 'itemTableData', res.reData1.itemTableData);
@@ -297,14 +302,14 @@ export const modalOptions = {
           this.getProAttr(this.rightData_pro.Id, this.rightData_pro.OCFId, this.selection.id, 'edit');
           break;
         case 'edit_item':
-          let {Id,ClsId,TmpId} = this.rightData_item;//当前修改条目的id
-          let directNowId=this.search_item.id;//当前条目所在目录的id
-          let directNowType=this.search_item.Type;//当前条目所在目录的Type
-          this.getItemAttr_second(Id,directNowId,directNowType,ClsId,TmpId);
+          let {Id, ClsId, TmpId} = this.rightData_item;//当前修改条目的id
+          let directNowId = this.search_item.id;//当前条目所在目录的id
+          let directNowType = this.search_item.Type;//当前条目所在目录的Type
+          this.getItemAttr_second(Id, directNowId, directNowType, ClsId, TmpId);
           break;
         case 'del_item':
           // 删除前检测
-          this.beforeDel_item(this.rightData_item.Id,'rightDel');
+          this.beforeDel_item(this.rightData_item.Id, 'rightDel');
           break;
         case 'del':
           // 如果是文件夹
@@ -328,7 +333,7 @@ export const modalOptions = {
               }
             })
           } else {
-            this.del_pro_type='tree';
+            this.del_pro_type = 'tree';
             // 如果是项目
             request({
               url: this.$collections.fileManager.checkDelPro,
@@ -354,11 +359,11 @@ export const modalOptions = {
           this.refreshTreeNode(this.rightNode_sideTree)
           break;
         case 'sort':
-          this.$set(this.nodeSort,'show',true);
+          this.$set(this.nodeSort, 'show', true);
           this.getNodeSortTable();
           break;
         case 'del_pro':
-          this.del_pro_type='table';
+          this.del_pro_type = 'table';
           // 如果是项目
           request({
             url: this.$collections.fileManager.checkDelPro,
@@ -378,10 +383,29 @@ export const modalOptions = {
             }
           })
           break;
-        // 预览
         case 'view_file':
-          this.openViewModal();
+          // 预览
+          this.openViewModalFun();
           break;
+        case 'down_file':
+          // 右键下载
+           let obj={
+             k:this.rightData_file.Id,
+             t:this.rightData_file.Type,
+           };
+          this.realDownFile([obj]);
+          break;
+        case 'del_file':
+          // 右键删除
+          this.$set(this.tipModal_file,'delData',[{
+            k:this.rightData_file.Id,
+            t:this.rightData_file.Type,
+          }]);
+          this.delFilesFun();
+          break;
+        default:
+          this.$current.alertMine("无效的点击事件。")
+          return false;
       }
     },
     // 初始化，恢复默认设置 添加文件夹
@@ -691,7 +715,7 @@ export const modalOptions = {
         } else if (res.reCode == 1) {
           this.$current.alertMine(res.reMsg);
         }
-      }).catch(rej=>{
+      }).catch(rej => {
         this.loading.close();
       })
 
@@ -699,7 +723,7 @@ export const modalOptions = {
     },
     // 获取下级节点排序表格
     getNodeSortTable() {
-      this.loading=this.$loading(this.$config.loadingStyle);
+      this.loading = this.$loading(this.$config.loadingStyle);
       request({
         url: this.$collections.fileManager.nodeSort,
         params: {
@@ -715,13 +739,13 @@ export const modalOptions = {
         } else {
           this.$set(this.nodeSort, 'data', []);
         }
-      }).catch(rej=>{
+      }).catch(rej => {
         this.loading.close();
       })
     },
     // 提交下级节点排序结果
     submit_nodeSort() {
-      this.loading=this.$loading(this.$config.loadingStyle);
+      this.loading = this.$loading(this.$config.loadingStyle);
       request({
         url: this.$collections.fileManager.subNodeSort,
         params: {
@@ -739,7 +763,7 @@ export const modalOptions = {
         } else if (res.reCode == 1) {
           this.$current.alertMine(res.reMsg);
         }
-      }).catch(rej=>{
+      }).catch(rej => {
         this.loading.close();
       })
     },
