@@ -42,7 +42,7 @@ module.exports = {
     /** dev环境下使用proxy代理，生产环境下注释此条后build */
     proxy: {
       "/api": {
-        target: "http://192.168.0.111:8072/", // 目标代理接口地址
+        target: "http://192.168.0.66:8072/", // 目标代理接口地址
         secure: false,
         changeOrigin: true, // 开启代理，在本地创建一个虚拟服务端
         ws: true, // 是否启用websockets

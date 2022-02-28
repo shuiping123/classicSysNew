@@ -83,13 +83,19 @@ export const tableItem = {
       this.rightData_item = row;
       // 判断权限 当前条目是否有修改权限
       let {optionRole} = this.$store.state.stateMine.UsrRole;
-      let showEdit = false, showDel = false;
+      let showEdit = false, showDel = false,showCopyAdd = false;
       if (this.selection) {
         showEdit = optionRole.LstAuth.filter(item => item.OCFId == this.selection.OCFId)[0].Lst.filter(item => item.OCATId == row.OCATId)[0].ItmUpdate;
         showDel = optionRole.LstAuth.filter(item => item.OCFId == this.selection.OCFId)[0].Lst.filter(item => item.OCATId == row.OCATId)[0].ItmDel;
+        showCopyAdd = optionRole.LstAuth.filter(item => item.OCFId == this.selection.OCFId)[0].Lst.filter(item => item.OCATId == row.OCATId)[0].ItmNew;
       }
       // 显示右键菜单
       let menu = [
+        {
+          value: 'copyAdd_item',
+          label: '复制添加',
+          disabled: !showCopyAdd,
+        },
         {
           value: 'edit_item',
           label: '编辑',

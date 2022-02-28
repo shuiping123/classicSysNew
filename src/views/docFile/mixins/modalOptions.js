@@ -214,7 +214,7 @@ export const modalOptions = {
     // 点击右键菜单
     changeMenu(node) {
       let clickNode = node[node.length - 1];
-      if (!clickNode)return false;
+      if (!clickNode) return false;
 
       // console.log(111,this.rightNode_sideTree)
       // return false;
@@ -228,6 +228,13 @@ export const modalOptions = {
         case 'addPro':
           this.getProAttr(0, this.rightNode_sideTree.OCFId, this.rightNode_sideTree.id, 'add');
           break;
+        case 'copyAdd_pro':
+          this.getProAttr(this.rightData_pro.Id, this.rightData_pro.OCFId, this.selection.id, 'add');
+          break;
+        case 'copyAdd_item':
+          this.$set(this.itemForm.second,'type','add');
+          this.getItemAttr_second(this.rightData_item.Id, this.search_item.id, this.search_item.Type, this.rightData_item.ClsId, this.rightData_item.TmpId);
+          break;
         case 'edit':
           /// Folder=根目录，右侧不显示
           /// NoHPro=无项目文件夹，右侧显示条目标签
@@ -235,7 +242,6 @@ export const modalOptions = {
           /// HPro_Public=文件夹节点，其下有项目,项目用公共的归档范围，点击时：右侧刷新显示项目、条目列表；
           if (this.rightNode_sideTree.Type == 'Folder' || this.rightNode_sideTree.Type == 'NoHPro' || this.rightNode_sideTree.Type == 'HPro_Self' || this.rightNode_sideTree.Type == 'HPro_Public') {
             let {OCFId, id} = this.rightNode_sideTree;
-
             // let {OCFId,id}=this.rightNode_sideTree;
             request({
               url: this.$collections.fileManager.getFolderInfo,
@@ -302,6 +308,7 @@ export const modalOptions = {
           this.getProAttr(this.rightData_pro.Id, this.rightData_pro.OCFId, this.selection.id, 'edit');
           break;
         case 'edit_item':
+          this.$set(this.itemForm.second,'type','edit');
           let {Id, ClsId, TmpId} = this.rightData_item;//当前修改条目的id
           let directNowId = this.search_item.id;//当前条目所在目录的id
           let directNowType = this.search_item.Type;//当前条目所在目录的Type
@@ -389,17 +396,17 @@ export const modalOptions = {
           break;
         case 'down_file':
           // 右键下载
-           let obj={
-             k:this.rightData_file.Id,
-             t:this.rightData_file.Type,
-           };
+          let obj = {
+            k: this.rightData_file.Id,
+            t: this.rightData_file.Type,
+          };
           this.realDownFile([obj]);
           break;
         case 'del_file':
           // 右键删除
-          this.$set(this.tipModal_file,'delData',[{
-            k:this.rightData_file.Id,
-            t:this.rightData_file.Type,
+          this.$set(this.tipModal_file, 'delData', [{
+            k: this.rightData_file.Id,
+            t: this.rightData_file.Type,
           }]);
           this.delFilesFun();
           break;

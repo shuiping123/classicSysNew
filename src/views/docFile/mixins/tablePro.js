@@ -35,6 +35,11 @@ export const tablePro = {
       let {optionRole} = this.$store.state.stateMine.UsrRole;
       let menu=[
         {
+          value: 'copyAdd_pro',
+          label: '复制添加',
+          disabled:!this.showAddButton_pro,
+        },
+        {
           value: 'edit_pro',
           label: '编辑',
           disabled:!this.showEditButton_pro,
@@ -187,7 +192,5 @@ export const tablePro = {
         this.loading.close();
       })
     },
-
-
   }
 }
