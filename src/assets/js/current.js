@@ -110,17 +110,16 @@ export default {
           return false;
         }
       });
-      if (node.length === 0) {
-        treeSearch.map(item => {
-          if (item[childNode]&&item[childNode].length > 0) {
-            searchForThis(propSearch, valueSearch, item[childNode]);
-          }
-        })
-      } else {
+      if (node.length !== 0) {
         node.map(item => {
           nodeArr.push(item);
         });
       }
+      treeSearch.map(item => {
+        if (item[childNode]&&item[childNode].length > 0) {
+          searchForThis(propSearch, valueSearch, item[childNode]);
+        }
+      })
     }
 
     searchForThis(prop, value, tree);

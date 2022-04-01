@@ -42,7 +42,8 @@ module.exports = {
     /** dev环境下使用proxy代理，生产环境下注释此条后build */
     proxy: {
       "/api": {
-        target: "http://192.168.0.66:8072/", // 目标代理接口地址
+        target: "http://192.168.0.111:8072/", // 目标代理接口地址
+        // target: "http://192.168.0.66:8072/", // 目标代理接口地址
         secure: false,
         changeOrigin: true, // 开启代理，在本地创建一个虚拟服务端
         ws: true, // 是否启用websockets
@@ -63,6 +64,12 @@ module.exports = {
         '@': resolve('src'),
       }
     }
+  },
+  pluginOptions: {
+    "style-resources-loader": {
+      preProcessor: "less",
+      patterns: [],
+    },
   },
   chainWebpack(config) {
     // it can improve the speed of the first screen, it is recommended to turn on preload
@@ -96,6 +103,7 @@ module.exports = {
         symbolId: 'icon-[name]'
       })
       .end()
+
 
     config
       .when(process.env.NODE_ENV !== 'development',

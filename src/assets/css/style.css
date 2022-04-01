@@ -1,6 +1,34 @@
 
+:root{
+  --borderStyle:2px solid #eee;
+}
+
+/*边框*/
+.borderStyle{
+  border:2px solid #eee;
+}
+.borderTop{
+  border-top:2px solid #eee;
+}
+
+.borderLeft{
+  border-left:2px solid #eee;
+}
+
+.borderRight{
+  border-right:2px solid #eee;
+}
+
+.borderBottom{
+  border-bottom:2px solid #eee;
+}
+
+/*布局*/
 .form-inline{
   display: flex;
+}
+.column{
+  flex-direction: column;
 }
 
 /*占满容器*/
@@ -9,6 +37,17 @@
   height:100%;
 }
 
+
+/*修改表格高亮颜色*/
+.el-table__body tr.current-row > td {
+  background-color: #ffe48d;
+}
+/*.el-table--enable-row-hover .el-table__body tr:hover > td {*/
+/*  background-color: rgba(255,228,141,0.34);*/
+/*}*/
+.el-table--enable-row-hover .el-table__body .current-row:hover > td {
+  background-color: #ffe48d;
+}
 
 
 /*清除按钮样式，包含边框，背景，hover全部清除*/
@@ -106,5 +145,42 @@
   text-overflow:ellipsis;
   white-space: nowrap;
 }
+
+
+/*调整单选框的样式*/
+.el-radio__label{
+  padding-left: 5px!important;
+  font-size: 12px!important;
+}
+
+/*右键菜单的样式*/
+.el-cascader-menu__wrap{
+  height:auto!important;
+  max-height:500px;
+}
+
+.tableInputText {
+  width: 120px;
+  margin-left: 5px !important;
+}
+.tableSelect{
+  margin-left: 5px !important;
+}
+
+.tableInputCircleBtn {
+  margin-left: 5px !important;
+}
+
+.tableInputBtn {
+  margin-left: 5px !important;
+}
+
+.tableInputCheck {
+  margin-left: 5px !important;
+  margin-right: 0 !important;
+}
+
+
+
 
 

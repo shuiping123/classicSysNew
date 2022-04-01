@@ -1,9 +1,11 @@
 import {request} from '@/network'
+import store from "@/store";
 
 export const tablePro = {
   data() {
     return {
-      rightData_pro:null,
+      multipleSelection_pro: [],//记录复选框选中的项目信息
+      rightData_pro: null,
       tableData_pro: {
         title: [],
         data: [],
@@ -21,33 +23,41 @@ export const tablePro = {
       let {optionRole} = this.$store.state.stateMine.UsrRole;
       return optionRole.IsProNew;
     },
-    showEditButton_pro:function(){
+    showEditButton_pro: function () {
       let {optionRole} = this.$store.state.stateMine.UsrRole;
       return optionRole.IsProUpdate;
+    },
+    showDelButton_pro: function () {
+      let {optionRole} = this.$store.state.stateMine.UsrRole;
+      return optionRole.IsProDel;
     },
   },
   methods: {
     cellClick_pro() {
     },
-    rightClick_pro(arg){
+    rightClick_pro(arg) {
       let {row, column, event} = arg;
-      this.rightData_pro=row;
-      let {optionRole} = this.$store.state.stateMine.UsrRole;
-      let menu=[
+      this.rightData_pro = row;
+      let menu = [
+        {
+          value: 'viewAttr_pro',
+          label: '查看属性',
+          disabled: false,
+        },
         {
           value: 'copyAdd_pro',
           label: '复制添加',
-          disabled:!this.showAddButton_pro,
+          disabled: !this.showAddButton_pro,
         },
         {
           value: 'edit_pro',
           label: '编辑',
-          disabled:!this.showEditButton_pro,
+          disabled: !this.showEditButton_pro,
         },
         {
           value: 'del_pro',
           label: '删除',
-          disabled:!optionRole.IsProDel,
+          disabled: !this.showDelButton_pro,
         },
       ];
       this.$refs.rightMenu.openMenu(menu, event.pageX, event.pageY);
@@ -56,24 +66,32 @@ export const tablePro = {
     dbclickFun_pro(row, column, event) {
       let data = row.row;
       // 清空查询条件
-      this.search_item = {name: '', code: '', isHaveFile: false};
+      this.$set(this.search_item,'name','');
+      this.$set(this.search_item,'code','');
+      this.$set(this.search_item,'isHaveFile',false);
+      this.$set(this.search_item,'haveVersion',false);
       // 展示条目列表
       this.reloadTableForThisPage_item(data.Id, data.Type, '', '', 1);
       // 条目标签获得焦点
       this.activeName = 'item';
     },
     // 点击查询
-    searchFun_pro(){
-      let {name,code} = this.search_pro;
-      let {id,Type} = this.selection;
-      this.reloadTableForThisPage_pro(id,Type,name,code,1);
+    searchFun_pro() {
+      let {name, code} = this.search_pro;
+      let {id, Type} = this.selection;
+      this.reloadTableForThisPage_pro(id, Type, name, code, 1);
     },
     // 取消查询
-    clearSeachFun_pro(){
-      this.$set(this.search_pro, 'name','');
-      this.$set(this.search_pro, 'code','');
-      let {id,Type} = this.selection;
-      this.reloadTableForThisPage_pro(id,Type,'','',1);
+    clearSeachFun_pro() {
+      this.$set(this.search_pro, 'name', '');
+      this.$set(this.search_pro, 'code', '');
+      let {id, Type} = this.selection;
+      this.reloadTableForThisPage_pro(id, Type, '', '', 1);
+    },
+    reloadTable_pro(page){
+      let {name, code} = this.search_pro;
+      let {id, Type} = this.selection;
+      this.reloadTableForThisPage_pro(id, Type, name, code, page);
     },
     reloadTableForThisPage_pro(id, Type, searchName, searchCode, pageNow) {
       this.$set(this.tableData_pro, 'loading', true);
@@ -93,32 +111,29 @@ export const tablePro = {
         }
       }).then(res => {
         this.$set(this.tableData_pro, 'loading', false);
-        let {title, data, limit} = res.reData;
         if (res.reCode == 0) {
+        let {title, data, limit} = res.reData;
           this.$set(this.tableData_pro, 'title', title);
           this.$set(this.tableData_pro, 'data', data);
           this.$set(this.tableData_pro, 'limit', limit);
-          this.$set(this.tableData_pro, 'count', res.reCount);
-        } else {
-          this.$set(this.tableData_pro, 'title', title);
-          this.$set(this.tableData_pro, 'data', data);
-          this.$set(this.tableData_pro, 'limit', limit);
-          this.$set(this.tableData_pro, 'count', res.reCount);
-          this.$set(this.tableData_pro, 'msg', res.reMsg);
+          this.$set(this.tableData_pro, 'count', res.reCount);0.
+        } else if (res.reCode==1){
+          this.$current.alertMine(res.reMsg);
         }
       })
     },
     // 点击添加项目
-    addProInfo(){
-      let {OCFId,id}=this.selection;
-      this.getProAttr(0,OCFId,id,'add');
+    addProInfo() {
+      let {OCFId, id} = this.selection;
+      this.$set(this.proForm,'type','add');
+      this.getProAttr(0, OCFId, id, 'add');
     },
     // 获取项目弹框的信息
     getProAttr(ProId, OCFId, id, type) {
       this.$set(this.proForm, 'ProId', ProId);
       this.$set(this.proForm, 'OCFId', OCFId);
       this.$set(this.proForm, 'pid', id);
-      this.loading=this.$loading(this.$config.loadingStyle);
+      this.loading = this.$loading(this.$config.loadingStyle);
       request({
         url: this.$collections.fileManager.getProInfoForAdd,
         params: {
@@ -144,9 +159,66 @@ export const tablePro = {
         } else if (res.reCode == 1) {
           this.$current.alertMine(res.reMsg);
         }
-      }).catch(rej=>{
+      }).catch(rej => {
         this.loading.close();
       })
+    },
+    // 点击批量删除
+    delProsFun() {
+      this.del_pro_type = 'table';
+      if (this.multipleSelection_pro.length === 0) {
+        this.$current.alertMine("当前无选中项，请选中后重试。");
+        return false;
+      }
+      let ids = this.multipleSelection_pro.map(item => {
+        return item.Id;
+      });
+      this.beforeDel_pro(ids.join(","));
+    },
+    // 删除前检测
+    beforeDel_pro(ids) {
+      this.loading = this.$loading(this.$config.loadingStyle);
+      request({
+        url: this.$collections.fileManager.checkDelPro,
+        params: {
+          ty: 'DelCheckProject',
+          ProId: ids
+        },
+      }).then(res => {
+        this.loading.close();
+        if (res.reCode == 0) {
+          this.$set(this.delModal_pro, 'show', true);//显示弹框
+          this.$set(this.delModal_pro, 'tip', res.reMsg);//提示信息
+          this.$set(this.delModal_pro, 'desc', '');//清空说明
+        } else if (res.reCode == 1) {
+          this.$set(this.delModal_pro, 'show', true);//显示弹框
+          this.$set(this.delModal_pro, 'tip', res.reMsg);//提示信息
+          this.$set(this.delModal_pro, 'desc', '');//清空说明
+        }
+      }).catch(rej => {
+        this.loading.close();
+      })
+    },
+    // 删除项目操作
+    submit_del_pro_tree() {
+      if (this.del_pro_type == 'tree') {
+        let parentNode = this.rightNode_sideTree.parent;
+        this.realDel_pro(this.rightNode_sideTree.id, this.delModal_pro.desc, parentNode);
+      } else if (this.del_pro_type == 'table-right') {
+        let arr = this.$current.searchNodeForTree('Type', this.rightData_pro.Type, this.tree_side_data, 'equal');
+        let result;
+        if (arr.length > 0) {
+          let resultArr = arr.filter(item => item.id == this.rightData_pro.Id);
+          result = resultArr.length > 0 ? resultArr[0] : null;
+        }
+        this.realDel_pro(this.rightData_pro.Id, this.delModal_pro.desc, result ? result.parent : null);
+      } else {
+        // 批量删除提交
+        this.realDel_pro(this.multipleSelection_pro.map(item => {
+          return item.Id
+        }).join(','), this.delModal_pro.desc, this.selection);
+      }
+
     },
     // 提交项目添加/修改
     submit_pro() {
@@ -168,7 +240,7 @@ export const tablePro = {
         url: this.$collections.fileManager.addOrEditPro,
         params: {
           ty: 'AddOrEditPro',
-          ProId: ProId,
+          ProId: type=='add'?0:ProId,
           id: pid,
           OCFId: OCFId,
           extension: JSON.stringify(extension),
@@ -180,6 +252,7 @@ export const tablePro = {
           this.$set(this.proForm, 'showModal', false);
           // 树形图初始化
           this.refreshTreeNode(this.selection);
+          this.refreshAllTables();
           // this.getTreeData().then((res) => {
           //   this.tree_side_data = res.reData;
           //   this.selection=null;
@@ -188,8 +261,70 @@ export const tablePro = {
         } else if (res.reCode == 1) {
           this.$current.alertMine(res.reMsg);
         }
-      }).catch(rej=>{
+      }).catch(rej => {
         this.loading.close();
+      })
+    },
+    /**
+     * 真正的删除操作
+     * ids 需要删除的id 例1,2,3
+     * desc 删除说明
+     * parent 在树上的父节点，选填，如果传值，讲刷新父节点
+     * */
+    realDel_pro(ids, desc, parent) {
+      this.loading = this.$loading(this.$config.loadingStyle);
+      request({
+        url: this.$collections.fileManager.delPro,
+        params: {
+          ty: 'DelProjectLstById',
+          ProId: ids,
+          DelNote: desc
+        }
+      }).then(res => {
+        this.loading.close();
+        if (res.reCode == 0) {
+          this.$set(this.delModal_pro, 'show', false);
+          // 去获取导航权限
+          this.$current.alertMine(res.reMsg, () => {
+            if (parent) {
+              // 刷新树
+              this.refreshTreeNode(parent);
+              // 如果还有选中项,刷新右侧表格
+              this.refreshAllTables();
+            }
+            // 如果还有选中项,刷新右侧表格
+            this.refreshAllTables();
+          });
+        } else if (res.reCode == 1) {
+          if (res.reData.data.length > 0) {
+            this.$set(this.tipModal_current,'show',true);
+            this.$set(this.tipModal_current,'type','proDel');
+            this.$set(this.tipModal_current,'data',res.reData);
+            this.$set(this.tipModal_current,'tip',res.reMsg);
+            this.$set(this.tipModal_current,'successData',res.reData1);
+            this.$set(this.delModal_pro,'show',false);
+          } else {
+            this.$current.alertMine(res.reMsg)
+          }
+        }
+      }).catch(rej => {
+        this.loading.close();
+      })
+    },
+    // 获取归档范围
+    getTreeTableData_GD_pro(){
+      request({
+        url:this.$collections.fileManager.getGDtreeTable,
+        params:{
+          ty:'GetProjArcScope',
+          ProId:this.rightData_pro.Id,
+        }
+      }).then(res=>{
+        if (res.reCode == 0){
+          this.$set(this.viewAttrModal,'formContent4',res.reData);
+        }else if (res.reCode == 1) {
+          this.$current.alertMine(res.reMsg);
+        }
       })
     },
   }

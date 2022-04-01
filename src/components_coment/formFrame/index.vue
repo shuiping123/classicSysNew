@@ -59,14 +59,14 @@
     padding: 2px!important;
     margin: 0!important;
   }
-  .modalFrameContent button{
-    height: 25px!important;
-  }
-  .modalFrameContent input[type=text]{
-    height: 25px!important;
-  }
-  .modalFrameContent input[type=number]{
-    width: 50px!important;
-    height: 25px!important;
-  }
+  /*.modalFrameContent button{*/
+  /*  height: 25px!important;*/
+  /*}*/
+  /*.modalFrameContent input[type=text]{*/
+  /*  height: 25px!important;*/
+  /*}*/
+  /*.modalFrameContent input[type=number]{*/
+  /*  width: 50px!important;*/
+  /*  height: 25px!important;*/
+  /*}*/
 </style>

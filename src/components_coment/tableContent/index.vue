@@ -328,6 +328,7 @@
       // *******************按住shift连选*******************
       // 当前高亮行，修改事件
       currentChange(currentRow, oldCurrentRow) {
+        this.$emit('current-change',currentRow);
         setTimeout(() => {
           if (this.data.length > 0) {
             if (!this.pin && !this.db) {

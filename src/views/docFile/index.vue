@@ -18,7 +18,7 @@
         </el-card>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;"
-           v-if="selection&&(selection.Type!='Folder'&&selection.Type!='CFolder')&&selection.id">
+           v-if="$store.state.stateMine.logState=='login'&&selection&&(selection.Type!='Folder'&&selection.Type!='CFolder')&&selection.id">
         <tab-mine :data="tabsList" :active_tab.sync="activeName"></tab-mine>
         <div style="flex:1;width:100%;">
           <!--项目表-->
@@ -28,6 +28,8 @@
             @rightClick="rightClick_pro"
             @cell-click="cellClick_pro"
             @row-dbclick="dbclickFun_pro"
+            @reloadTableForThisPage="reloadTable_pro"
+            @handleSelectionChange="multipleSelection_pro=$event"
             :page_bottom="true"
             :page_head="true"
             :data="tableData_pro">
@@ -44,7 +46,11 @@
                 <el-button type="primary" size="mini" class="tableInputBtn" plain :disabled="!showAddButton_pro"
                            @click="addProInfo">添加
                 </el-button>
-                <el-button type="danger" size="mini" class="tableInputBtn" plain>批量删除</el-button>
+                <el-button type="danger" size="mini" class="tableInputBtn"
+                           :disabled="!showDelButton_pro"
+                           @click="delProsFun"
+                           plain>批量删除
+                </el-button>
               </div>
             </div>
           </table-content>
@@ -55,6 +61,7 @@
             @rightClick="rightClick_item"
             @cell-click="cellClick_item"
             @row-dbclick="dbclickFun_item"
+            @reloadTableForThisPage="reloadTable_item"
             @handleSelectionChange="multipleSelection_item=$event"
             :page_bottom="true"
             :page_head="true"
@@ -64,6 +71,7 @@
                 <el-input v-model="search_item.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
                 <el-input v-model="search_item.code" size="mini" class="tableInputText"
                           placeholder="请输入档案号"></el-input>
+                <el-checkbox v-model="search_item.haveVersion" size="mini" class="tableInputCheck">包含历史版本</el-checkbox>
                 <el-checkbox v-model="search_item.isHaveFile" size="mini" class="tableInputCheck">包含电子文件</el-checkbox>
                 <!--搜索-->
                 <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn" circle
@@ -83,6 +91,9 @@
                            @click="delItems"
                            plain>批量删除
                 </el-button>
+                <!--<el-button type="primary" size="mini" class="tableInputBtn"-->
+                <!--           plain>提晒-->
+                <!--</el-button>-->
               </div>
             </div>
           </table-content>
@@ -92,15 +103,17 @@
             filter="tableVol"
             @cell-click="cellClick_vol"
             @row-dbclick="dbclickFun_vol"
+            @reloadTableForThisPage="reloadTable_vol"
             :page_bottom="true"
             :page_head="true"
             :data="tableData_vol">
             <div slot="t_header">
               <div style="padding:7px 0;align-items: center;" class="form-inline">
-                <el-input v-model="search_item.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
-                <el-input v-model="search_item.code" size="mini" class="tableInputText"
+                <el-input v-model="search_vol.name" size="mini" class="tableInputText" placeholder="请输入名称"></el-input>
+                <el-input v-model="search_vol.code" size="mini" class="tableInputText"
                           placeholder="请输入档案号"></el-input>
-                <el-checkbox v-model="search_item.isHaveFile" size="mini" class="tableInputCheck">包含电子文件</el-checkbox>
+                <el-checkbox v-model="search_vol.haveVersion" size="mini" class="tableInputCheck">包含历史版本</el-checkbox>
+                <el-checkbox v-model="search_vol.isHaveFile" size="mini" class="tableInputCheck">包含电子文件</el-checkbox>
                 <el-button type="primary" icon="el-icon-search" size="mini" class="tableInputCircleBtn" circle
                            @click="searchFun_vol"
                            plain></el-button>
@@ -119,6 +132,7 @@
             @rightClick="rightClick_file"
             @cell-click="cellClick_file"
             @row-dbclick="dbclickFun_file"
+            @reloadTableForThisPage="reloadTable_file"
             @handleSelectionChange="multipleSelection_file=$event"
             :page_bottom="true"
             :page_head="true"
@@ -133,7 +147,8 @@
                 <el-button type="primary" icon="el-icon-close" size="mini" class="tableInputCircleBtn" circle
                            @click="clearSeachFun_file"
                            plain></el-button>
-                <el-button type="primary" size="mini" class="tableInputBtn" @click="uploadFun_file" :disabled="!showUploadButton_file" plain>
+                <el-button type="primary" size="mini" class="tableInputBtn" @click="uploadFun_file"
+                           :disabled="!showUploadButton_file" plain>
                   上传
                 </el-button>
                 <el-button type="primary" size="mini" class="tableInputBtn" @click="downFilesFun" plain>批量下载</el-button>
@@ -149,7 +164,7 @@
     <right-menu ref="rightMenu" @changeRightMenu="changeMenu"/>
 
     <!--添加文件夹-->
-    <el-dialog width="470px" :title="folderForm.title" :visible.sync="folderForm.showFolderModal">
+    <el-dialog width="470px" :close-on-click-modal="false" :title="folderForm.title" :visible.sync="folderForm.showFolderModal">
       <form-mine @submit="submit_folder" ref="folderForm" :model="folderForm" size="mini" label-width="140px">
         <form-item-mine label="上级目录" v-if="folderForm.type=='add'&&rightNode_sideTree">
           {{rightNode_sideTree.text}}
@@ -204,6 +219,7 @@
         </form-item-mine>
         <form-item-mine label="维护 *" v-if="showTmp">
           <el-button size="mini" type="text" style="text-decoration:underline"
+                     v-if="folderForm.other.HavePro!=0"
                      @click="$set(folderForm.other.proInfo,'showModal',true)"><b>项目相关维护*</b></el-button>
           <el-button size="mini" type="text" style="text-decoration:underline"
                      @click="$set(folderForm.other.itemInfo,'showModal',true)"><b>条目相关维护*</b></el-button>
@@ -215,7 +231,7 @@
       </form-mine>
     </el-dialog>
     <!--项目相关维护-->
-    <el-dialog width="780px" :title="folderForm.other.proInfo.title" :visible.sync="folderForm.other.proInfo.showModal">
+    <el-dialog width="780px" :close-on-click-modal="false" :title="folderForm.other.proInfo.title" :visible.sync="folderForm.other.proInfo.showModal">
       <div style="width:100%;" class="form-inline">
         <div style="padding:10px;">
           <div class="title">选中项</div>
@@ -272,7 +288,7 @@
       </div>
     </el-dialog>
     <!--条目相关维护-->
-    <el-dialog width="780px" :title="folderForm.other.itemInfo.title"
+    <el-dialog width="780px" :close-on-click-modal="false" :title="folderForm.other.itemInfo.title"
                :visible.sync="folderForm.other.itemInfo.showModal">
       <div style="width:100%;" class="form-inline">
         <div style="padding:10px;">
@@ -331,7 +347,7 @@
     </el-dialog>
 
     <!--添加项目-->
-    <el-dialog width="470px" :title="proForm.title" :visible.sync="proForm.showModal">
+    <el-dialog width="470px" :title="proForm.title" :close-on-click-modal="false" :visible.sync="proForm.showModal">
       <form-mine @submit="submit_pro" ref="folderForm" size="mini" label-width="140px">
         <form-item-mine label="上级目录" v-if="proForm.type=='add'&&selection">
           {{selection.text}}
@@ -376,7 +392,7 @@
     </el-dialog>
 
     <!--删除文件夹提示-->
-    <el-dialog width="470px" title="删除文件夹提示" :visible.sync="delModal_folder.show">
+    <el-dialog width="470px" title="删除文件夹提示" :close-on-click-modal="false" :visible.sync="delModal_folder.show">
       <form @submit.prevent="submit_del_folder">
         <div><span>{{delModal_folder.tip}}</span></div>
         <div style="padding:10px 0;">删除理由：</div>
@@ -394,8 +410,8 @@
       </form>
     </el-dialog>
 
-    <!--删除项目提示 - 右键-->
-    <el-dialog width="470px" title="删除项目提示" :visible.sync="delModal_pro.show">
+    <!--删除项目提示-->
+    <el-dialog width="470px" title="删除项目提示" :close-on-click-modal="false" :visible.sync="delModal_pro.show">
       <form @submit.prevent="submit_del_pro_tree">
         <div><span>{{delModal_pro.tip}}</span></div>
         <div style="padding:10px 0;">删除理由：</div>
@@ -414,7 +430,7 @@
     </el-dialog>
 
     <!--下级节点排序弹框-->
-    <el-dialog width="350px" title="下级节点排序" :visible.sync="nodeSort.show">
+    <el-dialog width="350px" title="下级节点排序" :close-on-click-modal="false" :visible.sync="nodeSort.show">
       <form @submit.prevent="submit_nodeSort">
         <el-table :data="nodeSort.data" height="250" border style="width: 100%">
           <el-table-column prop="text" label="名称" width="180"></el-table-column>
@@ -434,7 +450,7 @@
     </el-dialog>
 
     <!--添加条目 第一个弹框 有项目文件夹 大类小类树形图-->
-    <el-dialog width="750px" title="选择分类" :visible.sync="itemForm.first.havProShow">
+    <el-dialog width="750px" title="选择分类" :close-on-click-modal="false" :visible.sync="itemForm.first.havProShow">
       <form @submit.prevent="submit_chooseCls_item">
         <div style="width:100%;height:300px;overflow:auto;">
           <Tree :data="itemForm.first.chooseClsData"
@@ -448,7 +464,7 @@
     </el-dialog>
 
     <!--添加条目 第一个弹框 无项目文件夹 选择模板-->
-    <el-dialog width="350px" title="选择模板" :visible.sync="itemForm.first.noProShow">
+    <el-dialog width="350px" title="选择模板" :close-on-click-modal="false"  :visible.sync="itemForm.first.noProShow">
       <form @submit.prevent="submit_chooseTmp_item">
         <el-select v-model="itemForm.first.chooseTmpValue" style="width:100%;" placeholder="请选择">
           <el-option
@@ -466,7 +482,7 @@
     </el-dialog>
 
     <!--添加条目/修改条目  第二个弹框-->
-    <el-dialog width="500px" :title="itemForm.second.type=='add'?'添加条目':'修改条目'" :visible.sync="itemForm.second.show">
+    <el-dialog width="500px" :close-on-click-modal="false" :title="itemForm.second.type=='add'?'添加条目':'修改条目'" :visible.sync="itemForm.second.show">
       <form-mine @submit="submit_item" ref="folderForm" size="mini" label-width="140px">
         <div style="height:350px;overflow:auto">
           <form-item-mine
@@ -479,7 +495,8 @@
               <template v-else-if="item.type=='txt'&&item.prop=='ItemArchNo'">
                 <el-input size="mini" style="width:180px" :disabled="item.isdisable"
                           :required="item.require" v-model="item.defvalue"/>
-                <el-button size="mini" @click="createCode_item" style="width:70px;" :loading="createCodeLoading_item">
+                <el-button size="mini" @click="createCode_item" style="width:70px;"
+                           :disabled="itemForm.second.data.ClsCode=='drawing'" :loading="createCodeLoading_item">
                   生成
                 </el-button>
               </template>
@@ -521,7 +538,7 @@
           </form-item-mine>
         </div>
 
-        <div style="width:100%;text-align:center">
+        <div style="width:100%;text-align:center;margin-top:10px;">
           <el-button size="mini" type="primary" native-type="submit">确定</el-button>
           <el-button size="mini" @click="$set(itemForm.second,'show',false)">取消</el-button>
         </div>
@@ -529,7 +546,7 @@
     </el-dialog>
 
     <!--删除条目提示 - 右键-->
-    <el-dialog width="470px" title="删除条目提示" :visible.sync="delModal_item.show">
+    <el-dialog width="470px" :close-on-click-modal="false" title="删除条目提示" :visible.sync="delModal_item.show">
       <form @submit.prevent="submit_del_item">
         <div><span>{{delModal_item.tip}}</span></div>
         <div style="padding:10px 0;">删除理由：</div>
@@ -548,7 +565,7 @@
     </el-dialog>
 
     <!--删除电子文件提示-->
-    <el-dialog width="470px" title="删除提示" :visible.sync="tipModal_file.delTipShow">
+    <el-dialog width="470px" :close-on-click-modal="false" title="删除提示" :visible.sync="tipModal_file.delTipShow">
       <form @submit.prevent="realDelFile(tipModal_file.delData)">
         <div><span>确定删除电子文件吗？如确认删除，请填写删除理由后提交。</span></div>
         <div style="padding:10px 0;">删除理由：</div>
@@ -568,7 +585,7 @@
 
 
     <!--删除条目提示 - 批量删除-->
-    <el-dialog width="470px" title="删除条目提示" :visible.sync="delModal_items.show">
+    <el-dialog width="470px" :close-on-click-modal="false" title="删除条目提示" :visible.sync="delModal_items.show">
       <form @submit.prevent="submit_del_items">
         <div><span>{{delModal_items.tip}}</span></div>
         <div style="padding:10px 0;">删除理由：</div>
@@ -588,7 +605,7 @@
 
 
     <!--电子文件 - 上传-->
-    <el-dialog width="900px" title="上传列表" :visible.sync="uploadModal_file.show">
+    <el-dialog width="900px" :close-on-click-modal="false" title="上传列表" :visible.sync="uploadModal_file.show">
       <form @submit.prevent="submitFun_autoUpload">
         <div>
           <div style="height:100%;width:100%" class="upload-demo-mine">
@@ -623,7 +640,9 @@
                       <td :title="item.path?item.path.split('/')[0]:''">
                         <div class="form-inline" v-if="item.path">
                           <div style="width:15px;" class="icon-folder-mine"></div>
-                          <div class="ellipsisText" style="flex:1;margin-left:2px;">{{ item.path?item.path.split('/')[0]:'' }}</div>
+                          <div class="ellipsisText" style="flex:1;margin-left:2px;">{{
+                            item.path?item.path.split('/')[0]:'' }}
+                          </div>
                         </div>
                       </td>
                       <!--<td-->
@@ -681,8 +700,11 @@
             <form-mine class="margin-top" label-width="170px" size="mini" border>
               <form-item-mine label="是否上传文件夹根目录：">
                 <div class="form-inline" style="width: 200px; align-items: center;">
-                  <label class="form-inline" style="align-items: center"><input type="radio" v-model="isUpRoot_upload" value="1"/>上传</label>
-                  <label class="form-inline" style="margin-left: 5px;align-items: center"><input type="radio" v-model="isUpRoot_upload" value="0"/>不上传</label>
+                  <label class="form-inline" style="align-items: center"><input type="radio" v-model="isUpRoot_upload"
+                                                                                value="1"/>上传</label>
+                  <label class="form-inline" style="margin-left: 5px;align-items: center"><input type="radio"
+                                                                                                 v-model="isUpRoot_upload"
+                                                                                                 value="0"/>不上传</label>
                 </div>
               </form-item-mine>
               <form-item-mine label="PDF类型：" v-if="dbclickData_item&&dbclickData_item.IsDraw  == 1">
@@ -693,9 +715,9 @@
                     value="1"/>红章</label>
                   <label class="form-inline" style="margin-left: 5px;align-items: center">
                     <input
-                    type="radio"
-                    v-model="pdfType_upload"
-                    value="2"/>黑章</label>
+                      type="radio"
+                      v-model="pdfType_upload"
+                      value="2"/>黑章</label>
                 </div>
               </form-item-mine>
             </form-mine>
@@ -710,13 +732,14 @@
 
 
     <!--查看PDF-->
-    <el-dialog width="800px" title="查看PDF" :visible.sync="view_file.showPdf">
+    <el-dialog width="800px" :close-on-click-modal="false" title="查看PDF" :visible.sync="view_file.showPdf">
       <form @submit.prevent>
         <div style="width:100%" v-if="view_file.showPdf&&fileUrl">
           <div style="text-align: center;">
             <el-button-group>
               <el-button type="primary" icon="el-icon-arrow-left" size="mini" @click="prePage">上一页</el-button>
-              <el-button type="primary" size="mini" @click="nextPage">下一页<i class="el-icon-arrow-right el-icon--right"></i>
+              <el-button type="primary" size="mini" @click="nextPage">下一页<i
+                class="el-icon-arrow-right el-icon--right"></i>
               </el-button>
             </el-button-group>
             <div style="margin-top: 10px; color: #409EFF">{{ pageNum_pdf }} / {{ pageTotalNum }}</div>
@@ -734,31 +757,34 @@
     </el-dialog>
 
     <!--查看图片-->
-    <el-dialog width="800px" title="查看图片" :visible.sync="view_file.showImg">
-        <div @contextmenu.prevent>
-          <img v-if="fileType=='img'&&fileUrl" :src="fileUrl" width="100%;" alt="">
-        </div>
+    <el-dialog width="800px" :close-on-click-modal="false" title="查看图片" :visible.sync="view_file.showImg">
+      <div @contextmenu.prevent>
+        <img v-if="fileType=='img'&&fileUrl" :src="fileUrl" width="100%;" alt="">
+      </div>
     </el-dialog>
 
     <!--查看excel-->
-    <el-dialog width="800px" title="查看表格" :visible.sync="view_file.showExcel">
+    <el-dialog width="800px" :close-on-click-modal="false" title="查看表格" :visible.sync="view_file.showExcel">
       <div @contextmenu.prevent style="width:100%;height:500px;">
-        <iframe v-if="fileType=='excel'&&fileUrl" :src="'static/extension/viewExcel/index.html?url=/'+fileUrl" style="width:100%;height:100%;overflow: auto" frameborder="0"></iframe>
+        <iframe v-if="fileType=='excel'&&fileUrl" :src="'static/extension/viewExcel/index.html?url=/'+fileUrl"
+                style="width:100%;height:100%;overflow: auto" frameborder="0"></iframe>
       </div>
     </el-dialog>
 
     <!--查看Word文档-->
-    <el-dialog width="800px" title="查看Word文档" :visible.sync="view_file.showWord">
+    <el-dialog width="800px" :close-on-click-modal="false" title="查看Word文档" :visible.sync="view_file.showWord">
       <div @contextmenu.prevent style="width:100%;">
         <view-word v-if="fileType=='word'&&fileUrl" :url="fileUrl"></view-word>
       </div>
     </el-dialog>
 
-    <!--下载失败弹框-->
-    <el-dialog :width="(tipModal_file.errData&&tipModal_file.errData.data.length>0)?'600px':'350px'" title="提示信息" :visible.sync="tipModal_file.showErr">
+    <!--下载失败/批量删除失败弹框-->
+    <el-dialog :close-on-click-modal="false" :width="(tipModal_file.errData&&tipModal_file.errData.data.length>0)?'600px':'350px'" title="提示信息"
+               :visible.sync="tipModal_file.showErr">
       <div>
         <div>{{tipModal_file.errTip}}</div>
-        <div style="width:100%;height:300px;margin-top:10px;" v-if="tipModal_file.showErr&&tipModal_file.errData&&tipModal_file.errData.data.length>0">
+        <div style="width:100%;height:300px;margin-top:10px;"
+             v-if="tipModal_file.showErr&&tipModal_file.errData&&tipModal_file.errData.data.length>0">
           <table-content
             filter="tableFile_downErr"
             :page_bottom="false"
@@ -769,12 +795,73 @@
         <div style="text-align:center;margin-top:10px;">
           <el-button size="mini" type="primary"
                      v-if="tipModal_file.successData.length>0"
-                     @click="()=>{$set(tipModal_file,'showErr',false);keepFun_file();}">继续</el-button>
+                     @click="()=>{$set(tipModal_file,'showErr',false);keepFun_file();}">继续
+          </el-button>
           <el-button size="mini" @click="$set(tipModal_file,'showErr',false)">取消</el-button>
         </div>
       </div>
     </el-dialog>
 
+    <!--批量删除失败-->
+    <el-dialog width="600px" :close-on-click-modal="false" title="提示信息" :visible.sync="tipModal_current.show">
+      <div v-if="tipModal_current.show">
+        <div>{{tipModal_current.tip}}</div>
+        <div style="width:100%;height:300px;margin-top:10px;">
+          <table-content
+            filter="tableFile_downErr"
+            :page_bottom="false"
+            :page_head="false"
+            :data="tipModal_current.data">
+          </table-content>
+        </div>
+        <div style="text-align:center;margin-top:10px;">
+          <el-button size="mini" type="primary"
+                     @click="()=>{keepFun;$set(tipModal_current,'show',false);}">继续
+          </el-button>
+          <el-button size="mini" @click="$set(tipModal_current,'show',false)">取消</el-button>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!--查看属性弹框-->
+    <el-dialog width="750px" :close-on-click-modal="false" title="查看属性信息" :visible.sync="viewAttrModal.show">
+      <div style="margin-bottom:20px;">
+        <el-tabs tab-position="top">
+          <el-tab-pane label="属性">
+            <form-mine ref="viewAttr" size="mini" label-width="120px" style="height: 350px;overflow:auto;">
+              <form-item-mine v-for="item in viewAttrModal.formContent1" :label="item.k">{{item.v}}</form-item-mine>
+            </form-mine>
+          </el-tab-pane>
+          <el-tab-pane label="上级属性">
+            <form-mine ref="viewAttr" size="mini" label-width="120px" style="height: 350px;overflow:auto;">
+              <form-item-mine v-for="item in viewAttrModal.formContent2" :label="item.k">{{item.v}}</form-item-mine>
+            </form-mine>
+          </el-tab-pane>
+          <el-tab-pane label="借阅信息">
+            <div style="height: 350px;overflow:auto;">
+              暂无信息
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="归档范围" v-if="viewAttrModal.showContent4">
+            <div>
+              <el-table size="mini" :data="viewAttrModal.formContent4"
+                        style="width: 100%;margin-bottom: 20px;" row-key="id" height="350px" border default-expand-all
+                        :tree-props="{children: 'children', hasChildren: 'hasChildren'}">
+                <el-table-column prop="text" label="名称" sortable/>
+                <el-table-column prop="ClsCode" label="编号" sortable width="70"/>
+                <el-table-column prop="ItemNum" label="条目数量" sortable width="95"/>
+                <el-table-column prop="FileNum" label="电子文件数量" sortable width="120"/>
+                <el-table-column prop="state" label="状态" sortable width="70">
+                  <template slot-scope="scope">
+                    {{scope.row.State==0?'':scope.row.State==1?'待确认':scope.row.State==2?'正常':'删除'}}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </el-dialog>
 
   </div>
 </template>
@@ -801,9 +888,9 @@
   import {viewFile} from './mixins/viewFile'
 
   export default {
-    name: "index",
-    components: {pdf,tableContent, tabMine, rightMenu,viewWord},
-    mixins: [tablePro, tableItem, tree, navTabs, modalOptions, tableVol, tableFile, uploadOption,viewFile],
+    name: "Dashboard",
+    components: {pdf, tableContent, tabMine, rightMenu, viewWord},
+    mixins: [tablePro, tableItem, tree, navTabs, modalOptions, tableVol, tableFile, uploadOption, viewFile],
     data() {
       return {}
     },
@@ -828,6 +915,7 @@
     background: #cde8ff;
     color: #327daa;
   }
+
   .fileListDiv table {
     width: 100px;
     table-layout: fixed; /* 只有定义了表格的布局算法为fixed，下面td的定义才能起作用。 */
@@ -840,28 +928,12 @@
     overflow: hidden; /* 内容超出宽度时隐藏超出部分的内容 */
     text-overflow: ellipsis; /* 当对象内文本溢出时显示省略标记(...) ；需与overflow:hidden;一起使用*/
     text-align: left;
-    padding-left:5px;
+    padding-left: 5px;
   }
 
 </style>
 <style>
-  .tableInputText {
-    width: 120px;
-    margin-left: 5px !important;
 
-  }
-
-  .tableInputCircleBtn {
-    margin-left: 5px !important;
-  }
-
-  .tableInputBtn {
-    margin-left: 5px !important;
-  }
-
-  .tableInputCheck {
-    margin-left: 5px !important;
-  }
 
 </style>
 

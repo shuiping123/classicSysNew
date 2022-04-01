@@ -83,16 +83,16 @@ const actions = {
   logout({ commit, state, dispatch }) {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
-        commit('SET_TOKEN', '')
-        commit('SET_ROLES', [])
-        removeToken()
+        commit('SET_TOKEN', '');
+        commit('SET_ROLES', []);
+        removeToken();
         // resetRouter()
         commit('stateMine/changeUsrRole', {nav:[]},{ root: true });
-        commit('stateMine/changeLogState', 'logout',{ root: true })
+        commit('stateMine/changeLogState', 'logout',{ root: true });
 
         // reset visited views and cached views
         // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
-        dispatch('tagsView/delAllViews', null, { root: true })
+        dispatch('tagsView/delAllViews', null, { root: true });
 
         resolve()
       }).catch(error => {
@@ -113,6 +113,7 @@ const actions = {
          // commit('stateMine/changeUsrRole', {nav:[]},{ root: true });
          // commit('stateMine/changeLogState', 'logout',{ root: true })
          dispatch('tagsView/delAllViews', null, { root: true })
+         // console.log('checklog');
          dispatch('logout').then(res=>{
            resolve();
          });
@@ -128,7 +129,7 @@ const actions = {
     })
   },
 
-  // 查看权限
+  // 查看权限 重新加载导航
   getpower({ commit, state, dispatch }){
     return new Promise((resolve, reject) => {
       getpower().then((res) => {
@@ -154,6 +155,34 @@ const actions = {
       })
     })
   },
+
+  // 重新获取权限 不重新加载导航
+  getpowerAgain({ commit, state, dispatch }){
+    return new Promise((resolve, reject) => {
+      getpower().then((res) => {
+        if (res.reCode==0){
+          commit('settings/CHANGE_SETTING', {key:'language',value:res.reData.IsChn?'zh':'en'});
+          commit('stateMine/changeLogState', 'login',{ root: true });
+          commit("stateMine/changeUsrInfo",res.reData,{ root: true });
+        }else{
+          commit('SET_TOKEN', '');
+          commit('SET_ROLES', []);
+          removeToken();
+          // resetRouter();
+          commit('stateMine/changeUsrRole', {nav:[]},{ root: true });
+          commit('stateMine/changeLogState', 'logout',{ root: true });
+
+          // reset visited views and cached views
+          // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
+          dispatch('tagsView/delAllViews', null, { root: true })
+        }
+        resolve();
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
+
 
   // remove token
   resetToken({ commit }) {

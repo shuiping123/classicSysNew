@@ -19,6 +19,7 @@ export const tableItem = {
         name: '',//名称
         code: '',//编号
         isHaveFile: false,//是否包含电子文件
+        haveVersion: false,//是否包含历史版本
       },
       createCodeLoading_item:false,//生成档案号 loading是否显示
     }
@@ -56,12 +57,11 @@ export const tableItem = {
       if (data.IsVol == '卷') {
         // 如果是卷内件
         // 需要清空查询条件并重新查询结果
-        this.search_vol = {
-          name: '',//名称
-          code: '',//编号
-          isHaveFile: false,//是否包含电子文件
-        };
-        let {name, code, isHaveFile} = this.search_vol;
+        this.$set(this.search_vol,'name','');
+        this.$set(this.search_vol,'code','');
+        this.$set(this.search_vol,'isHaveFile',false);
+        this.$set(this.search_vol,'haveVersion',false);
+        let {name, code} = this.search_vol;
         this.reloadTableForThisPage_vol(data.Id, data.Type, name, code, 1);
         // 标签联动
         this.$set(this.tabsList[2], 'show', true);// 打开卷内件标签
@@ -92,6 +92,11 @@ export const tableItem = {
       // 显示右键菜单
       let menu = [
         {
+          value: 'viewAttr_item',
+          label: '查看属性',
+          disabled: false,
+        },
+        {
           value: 'copyAdd_item',
           label: '复制添加',
           disabled: !showCopyAdd,
@@ -111,7 +116,7 @@ export const tableItem = {
     },
     // 点击查询
     searchFun_item() {
-      let {id, Type, name, code, isHaveFile} = this.search_item;
+      let {id, Type, name, code, isHaveFile, haveVersion} = this.search_item;
       this.reloadTableForThisPage_item(id, Type, name, code, 1);
       // 如果选中了包含的电子文件
       if (isHaveFile) {
@@ -137,6 +142,20 @@ export const tableItem = {
       this.$set(this.tabsList[3], 'show', false);
       this.$set(this.tabsList[2], 'show', false);
     },
+    reloadTable_item(page){
+      let {id, Type, name, code, isHaveFile, haveVersion} = this.search_item;
+      this.reloadTableForThisPage_item(id, Type, name, code, page);
+      // 如果选中了包含的电子文件
+      if (isHaveFile) {
+        // 清空查询条件 电子文件
+        this.$set(this.search_file, 'name', '');
+        // 标签联动 开启电子文件标签 关闭卷内件标签
+        this.$set(this.tabsList[3], 'show', true);
+        this.$set(this.tabsList[2], 'show', false);
+        // 查询结果 电子文件
+        this.reloadTableForThisPage_file(id, Type, '', 1)
+      }
+    },
     // 查询条目列表 表格
     reloadTableForThisPage_item(id, Type, searchName, searchCode, pageNow) {
       this.$set(this.tableData_item, 'loading', true);
@@ -151,6 +170,7 @@ export const tableItem = {
           Type: Type,
           SearchName: searchName,
           SearchArchNo: searchCode,
+          IsIncHisVer: this.search_item.IsIncHisVer,
           isSelection: true,//是否开启多选框
           page: 1,
           pageNow: pageNow,
@@ -166,18 +186,14 @@ export const tableItem = {
           this.$set(this.tableData_item, 'data', data);
           this.$set(this.tableData_item, 'limit', limit);
           this.$set(this.tableData_item, 'count', res.reCount);
-        } else {
-          let {title, data, limit} = res.reData;
-          this.$set(this.tableData_item, 'title', title);
-          this.$set(this.tableData_item, 'data', data);
-          this.$set(this.tableData_item, 'limit', limit);
-          this.$set(this.tableData_item, 'count', res.reCount);
-          this.$set(this.tableData_item, 'msg', res.reMsg);
+        } else if(res.reCode==1){
+          this.$current.alertMine(res.reMsg);
         }
       })
     },
     // 点击添加条目  获取条目弹框信息 第一个弹框
     getItemAttr_first() {
+      this.$set(this.itemForm.second,'type','add');
       // 如果是无项目文件夹
       if (this.selection.Type=='NoHPro'){
         this.$set(this.itemForm.first,'chooseTmpValue','');//清空选中项
@@ -233,7 +249,7 @@ export const tableItem = {
       // 判断是否选中了有效选择项 即是否选择了小类
       if (value&&!value.disabled) {
         this.$set(this.itemForm.first,'havProShow',false);//关闭第一个弹框
-        this.getItemAttr_second(0,this.search_item.id,this.search_item.Type,value.id,0);
+        this.getItemAttr_second(0,this.search_item.id,this.search_item.Type,value.id,0,value.ClsCode);
       }else {
         this.$current.alertMine('未选中有效项，请重新选择后确定。');
       }
@@ -243,15 +259,19 @@ export const tableItem = {
       let value=this.itemForm.first.chooseTmpValue;
       if (value){
         this.$set(this.itemForm.first,'noProShow',false);//关闭第一个弹框
-        this.getItemAttr_second(0,this.search_item.id,this.search_item.Type,0,value);
+        let node = this.itemForm.first.chooseTmpData.filter(item=>{return item.value==value;})[0];
+        this.getItemAttr_second(0,this.search_item.id,this.search_item.Type,0,value,node.ClsCode);
       }else {
         this.$current.alertMine('未选中有效项，请重新选择后确定。');
       }
     },
     // 添加条目 加载表单信息 并打开第二个弹框
-    getItemAttr_second(ItemId,id,Type,ClsId,TmpId){
+    getItemAttr_second(ItemId,id,Type,ClsId,TmpId,ClsCode){
+      this.$set(this.itemForm.second.data,'id',id);
+      this.$set(this.itemForm.second.data,'Type',Type);
       this.$set(this.itemForm.second.data,'ClsId',ClsId);
       this.$set(this.itemForm.second.data,'TmpId',TmpId);
+      this.$set(this.itemForm.second.data,'ClsCode',ClsCode);
       this.loading=this.$loading(this.$config.loadingStyle);
       request({
         url:this.$collections.fileManager.getItemInfoForm,
@@ -373,14 +393,16 @@ export const tableItem = {
     submit_item(){
       let tips=[];
       let ItemId=()=>{
-        if(this.itemForm.type==='add')return 0;
+        if(this.itemForm.second.type==='add')return 0;
         else return this.rightData_item.Id;
-      }
+      };
       let obj={
-        ty:this.itemForm.type==='add'?'AddItemLst':'EditItemLst',
-        id:this.search_item.id,
-        ItemId:ItemId,
-        Type:this.search_item.Type,
+        ty:this.itemForm.second.type==='add'?'AddItemLst':'EditItemLst',
+        id:this.itemForm.second.data.id,
+        Type:this.itemForm.second.data.Type,
+        // id:this.search_item.id,
+        // Type:this.search_item.Type,
+        ItemId:ItemId(),
         OCFId:this.selection.OCFId,
         ClsId:this.itemForm.second.data.ClsId,
         TmpId:this.itemForm.second.data.TmpId,
@@ -489,7 +511,17 @@ export const tableItem = {
           let {id, Type, name, code} = this.search_item;
           this.searchFun_item();
         }else if (res.reCode==1){
-          this.$current.alertMine(res.reMsg);
+          if (res.reData.data.length>0){
+            this.$set(this.tipModal_current,'show',true);
+            this.$set(this.delModal_item,'show',false);
+            this.$set(this.delModal_items,'show',false);
+            this.$set(this.tipModal_current,'type','itemDel');
+            this.$set(this.tipModal_current,'data',res.reData);
+            this.$set(this.tipModal_current,'tip',res.reMsg);
+            this.$set(this.tipModal_current,'successData',res.reData1);
+          }else {
+            this.$current.alertMine(res.reMsg);
+          }
         }
       }).catch(rej=>{this.loading.close();})
     },

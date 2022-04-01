@@ -7,7 +7,7 @@ export const tree = {
       tree_side_data: [],//树形结构的数据
       selection: null,//当前选中的节点
       rightNode_sideTree: null,//右键的节点
-      del_pro_type:'tree',//tree 在树上触发，table 在表格右键触发
+      del_pro_type:'tree',//tree 在树上触发，table-right 在表格右键上触发  table在表格上触发
     };
   },
   watch: {
@@ -378,14 +378,14 @@ export const tree = {
               // console.log(2222,node);
             }
           } else if (res.reCode == 1) {
-            this.$current.messageMine(res.reMsg, 'error');
+            this.$current.alertMine(res.reMsg);
           }
         });
       }
     },
     // 选中节点 - 选中节点触发
     nodeClickFun(node) {
-      this.selection = node
+      this.selection = node;
       if (node.Type == 'Folder' || node.Type == 'CFolder') {
         return false;
       }
@@ -471,67 +471,6 @@ export const tree = {
           this.$current.alertMine(res.reMsg)
         }
       })
-    },
-    // 删除项目操作
-    submit_del_pro_tree() {
-      if (this.del_pro_type=='tree'){
-        let parentNode=this.rightNode_sideTree.parent;
-        // return false;
-        request({
-          url: this.$collections.fileManager.delPro,
-          params: {
-            ty: 'DelProjectLstById',
-            ProId: this.rightNode_sideTree.id,
-            DelNote: this.delModal_pro.desc
-          }
-        }).then(res => {
-          if (res.reCode == 0) {
-            this.$set(this.delModal_pro, 'show', false);
-            this.$current.alertMine(res.reMsg, () => {
-              // 刷新树
-              this.refreshTreeNode(parentNode);
-              // 如果还有选中项,刷新右侧表格
-              this.refreshAllTables();
-            });
-          } else if (res.reCode == 1) {
-            this.$current.alertMine(res.reMsg)
-          }
-        })
-      }else {
-        let arr=this.$current.searchNodeForTree('Type',this.rightData_pro.Type,this.tree_side_data,'equal');
-        let result;
-        if (arr.length > 0) {
-          let resultArr=arr.filter(item=>item.id==this.rightData_pro.Id);
-          result=resultArr.length > 0 ? resultArr[0]:null;
-        }
-        // return false;
-        request({
-          url: this.$collections.fileManager.delPro,
-          params: {
-            ty: 'DelProjectLstById',
-            ProId: this.rightData_pro.Id,
-            DelNote: this.delModal_pro.desc
-          }
-        }).then(res => {
-          if (res.reCode == 0) {
-            this.$set(this.delModal_pro, 'show', false);
-            this.$current.alertMine(res.reMsg, () => {
-              if(result){
-                // 刷新树
-                let parentNode=result.parent;
-                this.refreshTreeNode(parentNode);
-                // 如果还有选中项,刷新右侧表格
-                this.refreshAllTables();
-              }
-              // 如果还有选中项,刷新右侧表格
-              this.refreshAllTables();
-            });
-          } else if (res.reCode == 1) {
-            this.$current.alertMine(res.reMsg)
-          }
-        })
-      }
-
     },
   }
 }

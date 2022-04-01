@@ -21,6 +21,8 @@ import config from '@/assets/js/config';
 Vue.prototype.$current=current;
 Vue.prototype.$collections=collections;
 Vue.prototype.$config=config;
+import less from 'less'
+Vue.use(less);
 
 import './icons' // icon
 import './permission' // permission control

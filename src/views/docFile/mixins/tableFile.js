@@ -116,6 +116,9 @@ export const tableFile = {
       ];
       this.$refs.rightMenu.openMenu(menu, event.pageX, event.pageY);
     },
+    reloadTable_file(page){
+      this.reloadTableForThisPage_file(this.search_file.id,this.search_file.Type,this.search_file.name,page);
+    },
     reloadTableForThisPage_file(id, Type, searchName, pageNow) {
       this.$set(this.search_file, 'id', id);
       this.$set(this.search_file, 'Type', Type);

@@ -463,7 +463,7 @@ export async function resetRouter(routers) {
   // generate accessible routes map based on roles
   const accessRoutes =await store.dispatch('permission/generateRoutes', asyncRoutes, { root: true })
   // dynamically add accessible routes
-  router.addRoutes(accessRoutes)
+  router.addRoutes(accessRoutes);
 
   // reset visited views and cached views
   store.dispatch('tagsView/delAllViews', null, { root: true })
@@ -522,16 +522,20 @@ export default router
 
 // 路由守卫，跳转之前 - 检查登录
 router.beforeEach((to, from, next) => {
-  if (to.path !== '/login'&&to.path.indexOf('static')==-1) {
+  if (to.path !== '/login'&&to.path.indexOf('static')==-1&&to.path!=='/404') {
     // 先检查是否登录了
     store.dispatch('user/checklog').then(()=>{
       // 如果登录了，且没有导航权限
       if (store.state.stateMine.logState=="login"&&store.state.stateMine.UsrRole.nav.length==0){
         // 去获取导航权限
-        store.dispatch('user/getpower').then(()=>{next();})
+        store.dispatch('user/getpower').then(()=>{
+          next();
+        });
         return false;
+      }else{
+        next();
       }
-      next();
+
     });
     return false;
   }

@@ -42,8 +42,17 @@ const mutations = {
   changeUsrRole(state, data) {
     let {nav,ADId,UsrId,DepName,UsrName,UsrRoleId,UsrRealName,RoleName,UsrState,Auth} = data;
     nav = nav.length > 0 ? nav : [];
-    Vue.set(state.UsrRole, 'nav', nav)
+    Vue.set(state.UsrRole, 'nav', nav);
     resetRouter(nav);
+    Vue.set(state.UsrRole, 'usrInfo', {
+      ADId,UsrId,DepName,UsrName,UsrRoleId,UsrRealName,RoleName,UsrState
+    });
+
+    Vue.set(state.UsrRole, 'optionRole', Auth);
+  },
+  // 修改用户权限 不更新路由
+  changeUsrInfo(state, data) {
+    let {nav,ADId,UsrId,DepName,UsrName,UsrRoleId,UsrRealName,RoleName,UsrState,Auth} = data;
     Vue.set(state.UsrRole, 'usrInfo', {
       ADId,UsrId,DepName,UsrName,UsrRoleId,UsrRealName,RoleName,UsrState
     });

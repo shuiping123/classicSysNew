@@ -13,6 +13,7 @@ export const tableVol = {
         name:'',//名称
         code:'',//编号
         isHaveFile:false,//是否包含电子文件
+        haveVersion:false,//是否包含历史版本
       }
     }
   },
@@ -54,6 +55,20 @@ export const tableVol = {
       // 标签联动 关闭电子文件标签
       this.$set(this.tabsList[3], 'show',false);
     },
+    reloadTable_vol(page){
+      let {name,code,isHaveFile} = this.search_vol;
+      let {Id,Type} = this.dbclickData_item;
+      this.reloadTableForThisPage_vol(Id,Type,name,code,page);
+      // 如果选中了包含的电子文件
+      if(isHaveFile){
+        // 清空查询条件 电子文件
+        this.$set(this.search_file,'name','');
+        // 标签联动 开启电子文件标签
+        this.$set(this.tabsList[3], 'show',true);
+        // 查询结果 电子文件
+        this.reloadTableForThisPage_file(Id,Type,'',1)
+      }
+    },
     reloadTableForThisPage_vol(id,Type,searchName,searchCode,pageNow){
       this.$set(this.tableData_vol,'loading',true);
       request({
@@ -64,6 +79,7 @@ export const tableVol = {
           Type:Type,
           SearchName:searchName,
           SearchArchNo:searchCode,
+          IsIncHisVer: this.search_vol.IsIncHisVer,
           isSelection:true,//是否开启多选框
           page:1,
           pageNow:pageNow,

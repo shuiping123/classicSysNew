@@ -1,4 +1,5 @@
 import {request} from '@/network'
+import store from "@/store";
 
 export const modalOptions = {
   data() {
@@ -176,6 +177,7 @@ export const modalOptions = {
           data: {
             ClsId: '',
             TmpId: '',
+            ClsCode:'',//drawing时候 禁用生成档案号按钮
           },
           formContent: [],//动态的提交条件
         },
@@ -192,6 +194,29 @@ export const modalOptions = {
         desc: '',//删除说明
         tip: '',//提示信息
       },
+      tipModal_current:{
+        type:'itemDel',//itemDel条目批量删除 proDel项目批量删除
+        show:false,//是否显示弹框
+        //错误信息表格
+        data:{
+          data:[],
+          title:[],
+          msg:''
+        },
+        successData:'',//点击继续时，需要传的信息
+        tip:'',//错误信息
+      },
+      viewAttrModal:{
+        show:false,//弹框是否显示
+        formContent1:[
+          {k:"名称",v:'项目1'},
+          {k:"名称名称",v:'项目1项目1项目1项目1'},
+          {k:"名称名称",v:'项目1项目1项目1'},
+        ],//需要展示的数据 属性标签
+        formContent2:[],//需要展示的数据 上级属性标签
+        showContent4:false,
+        formContent4:[],
+      }
     }
   },
   watch: {
@@ -226,14 +251,16 @@ export const modalOptions = {
           this.clearFolderModal(this.rightNode_sideTree.OCFId);
           break;
         case 'addPro':
+          this.$set(this.proForm,'type','add');
           this.getProAttr(0, this.rightNode_sideTree.OCFId, this.rightNode_sideTree.id, 'add');
           break;
         case 'copyAdd_pro':
+          this.$set(this.proForm,'type','add');
           this.getProAttr(this.rightData_pro.Id, this.rightData_pro.OCFId, this.selection.id, 'add');
           break;
         case 'copyAdd_item':
           this.$set(this.itemForm.second,'type','add');
-          this.getItemAttr_second(this.rightData_item.Id, this.search_item.id, this.search_item.Type, this.rightData_item.ClsId, this.rightData_item.TmpId);
+          this.getItemAttr_second(this.rightData_item.Id, this.rightData_item.itmPId, this.rightData_item.itmPType, this.rightData_item.ClsId, this.rightData_item.TmpId);
           break;
         case 'edit':
           /// Folder=根目录，右侧不显示
@@ -242,6 +269,7 @@ export const modalOptions = {
           /// HPro_Public=文件夹节点，其下有项目,项目用公共的归档范围，点击时：右侧刷新显示项目、条目列表；
           if (this.rightNode_sideTree.Type == 'Folder' || this.rightNode_sideTree.Type == 'NoHPro' || this.rightNode_sideTree.Type == 'HPro_Self' || this.rightNode_sideTree.Type == 'HPro_Public') {
             let {OCFId, id} = this.rightNode_sideTree;
+            this.loading=this.$loading(this.$config.loadingStyle);
             // let {OCFId,id}=this.rightNode_sideTree;
             request({
               url: this.$collections.fileManager.getFolderInfo,
@@ -250,6 +278,7 @@ export const modalOptions = {
                 Id: id
               }
             }).then(res => {
+              this.loading.close();
               if (res.reCode == 0) {
                 this.$set(this.folderForm, 'type', 'edit');
                 this.$set(this.folderForm, 'showFolderModal', true);
@@ -281,9 +310,9 @@ export const modalOptions = {
                 this.$set(this.folderForm.other, 'HavePro', res.reData.HavePro);
                 this.$set(this.folderForm.other, 'id', res.reData.FolderId);
                 let {AttrTypeId, TmpIds, ScrClsJson} = res.reData;
-                AttrTypeId = AttrTypeId ? AttrTypeId.split(',') : [];
-                TmpIds = TmpIds ? TmpIds.split(',') : [];
-                ScrClsJson = ScrClsJson ? ScrClsJson.split(',') : [];
+                AttrTypeId = AttrTypeId ? AttrTypeId.split(',').map(item=>{return parseInt(item)}) : [];
+                TmpIds = TmpIds ? TmpIds.split(',').map(item=>{return parseInt(item)}) : [];
+                ScrClsJson = ScrClsJson ? ScrClsJson.split(',').map(item=>{return parseInt(item)}) : [];
                 this.getMjData(OCFId, ScrClsJson.map(item => {
                   return parseInt(item)
                 }));// 密级下拉菜单
@@ -298,20 +327,24 @@ export const modalOptions = {
               } else {
                 this.$current.alertMine(res.reMsg);
               }
+            }).catch(rej => {
+              this.loading.close();
             })
           } else {
+            this.$set(this.proForm,'type','edit');
             this.getProAttr(this.rightNode_sideTree.id, this.rightNode_sideTree.OCFId, 0, 'edit');
           }
           break;
         case 'edit_pro':
           // 项目表格功能区右键 点击编辑项目
+          this.$set(this.proForm,'type','edit');
           this.getProAttr(this.rightData_pro.Id, this.rightData_pro.OCFId, this.selection.id, 'edit');
           break;
         case 'edit_item':
           this.$set(this.itemForm.second,'type','edit');
           let {Id, ClsId, TmpId} = this.rightData_item;//当前修改条目的id
-          let directNowId = this.search_item.id;//当前条目所在目录的id
-          let directNowType = this.search_item.Type;//当前条目所在目录的Type
+          let directNowId = this.rightData_item.itmPId;//当前条目所在目录的id
+          let directNowType = this.rightData_item.itmPType;//当前条目所在目录的Type
           this.getItemAttr_second(Id, directNowId, directNowType, ClsId, TmpId);
           break;
         case 'del_item':
@@ -342,23 +375,7 @@ export const modalOptions = {
           } else {
             this.del_pro_type = 'tree';
             // 如果是项目
-            request({
-              url: this.$collections.fileManager.checkDelPro,
-              params: {
-                ty: 'DelCheckProject',
-                ProId: this.rightNode_sideTree.id
-              },
-            }).then(res => {
-              if (res.reCode == 0) {
-                this.$set(this.delModal_pro, 'show', true);//显示弹框
-                this.$set(this.delModal_pro, 'tip', res.reMsg);//提示信息
-                this.$set(this.delModal_pro, 'desc', '');//清空说明
-              } else if (res.reCode == 1) {
-                this.$set(this.delModal_pro, 'show', true);//显示弹框
-                this.$set(this.delModal_pro, 'tip', res.reMsg);//提示信息
-                this.$set(this.delModal_pro, 'desc', '');//清空说明
-              }
-            })
+            this.beforeDel_pro(this.rightNode_sideTree.id);
           }
 
           break;
@@ -370,7 +387,7 @@ export const modalOptions = {
           this.getNodeSortTable();
           break;
         case 'del_pro':
-          this.del_pro_type = 'table';
+          this.del_pro_type = 'table-right';
           // 如果是项目
           request({
             url: this.$collections.fileManager.checkDelPro,
@@ -409,6 +426,17 @@ export const modalOptions = {
             t: this.rightData_file.Type,
           }]);
           this.delFilesFun();
+          break;
+        case 'viewAttr_item':
+          // 查看属性 条目
+          this.viewAttr(this.rightData_item.Id,this.rightData_item.Type);
+          this.$set(this.viewAttrModal,'showContent4',false);
+          break;
+        case 'viewAttr_pro':
+          // 查看属性 项目
+          this.viewAttr(this.rightData_pro.Id,this.rightData_pro.Type);
+          this.$set(this.viewAttrModal,'showContent4',true);
+          this.getTreeTableData_GD_pro();
           break;
         default:
           this.$current.alertMine("无效的点击事件。")
@@ -685,7 +713,7 @@ export const modalOptions = {
         this.$current.alertMine("您未选择显示模板。");
         return false;
       }
-      if (this.showTmp && proTableData.length == 0) {
+      if (this.showTmp && this.folderForm.other.HavePro!=0 && proTableData.length == 0) {
         this.$current.alertMine("项目相关维护未添加。");
         return false;
       }
@@ -712,8 +740,11 @@ export const modalOptions = {
         if (res.reCode == 0) {
           this.$current.alertMine(res.reMsg);
           this.$set(this.folderForm, 'showFolderModal', false);
+
           // 树形图初始化
           this.refreshTreeNode(this.rightNode_sideTree)
+          this.$store.dispatch('user/getpowerAgain')
+          // this.$store.dispatch('user/getpower');
           // this.getTreeData().then((res) => {
           //   this.tree_side_data = res.reData;
           //   this.selection=null;
@@ -779,6 +810,42 @@ export const modalOptions = {
       if (!value) return true;
       return data.label.indexOf(value) !== -1;
     },
-
+    // 点击继续 通用
+    keepFun(){
+      switch (this.tipModal_current.type){
+        // 条目批量删除的报错，点击继续
+        case "itemDel":
+          this.realDel_item(this.tipModal_current.successData,this.delModal_item.desc);
+          break;
+        // 项目批量删除的报错，点击继续
+        case "proDel":
+          // 批量删除提交
+          this.realDel_pro(this.tipModal_current.successData, this.delModal_pro.desc, this.selection)
+          break;
+        default:
+          return false;
+      }
+    },
+    // 查看属性的接口 项目/条目 通用
+    viewAttr(Id,Type){
+      this.loading = this.$loading(this.$config.loadingStyle);
+      request({
+        url:this.$collections.fileManager.getAttr,
+        params:{
+          ty:'GetAttrInfo',
+          Id:Id,
+          Type:Type
+        },
+      }).then(res => {
+        this.loading.close();
+        if (res.reCode==0){
+          this.$set(this.viewAttrModal,'show',true);
+          this.$set(this.viewAttrModal,'formContent1',res.reData);
+          this.$set(this.viewAttrModal,'formContent2',res.reData1);
+        }else if (res.reCode == 1){
+          this.$current.alertMine(res.reMsg);
+        }
+      }).catch(rej=>{this.loading.close();})
+    },
   },
 };
